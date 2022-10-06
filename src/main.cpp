@@ -1,5 +1,4 @@
 #include <iostream>
-#include <yaml-cpp/yaml.h>
 
 #include "Supervisor.hpp"
 
@@ -10,7 +9,7 @@ int main(int ac, char *av[])
     std::cout << "taskmaster v0.0.1" << std::endl;
     /* get args */
     Supervisor s("./input.yaml");
-    if (!s.isValidConfig())
+    if (!s.isConfigValid())
     {
         return (1);
     }
