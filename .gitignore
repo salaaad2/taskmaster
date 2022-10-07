@@ -5,3 +5,11 @@ libyaml-cpp.a
 ext/yaml-cpp/build/
 ext/yaml-cpp/tags/
 ext/yaml-cpp/bazel*
+*.cflags
+*.config
+*.creator
+*.creator.user
+*.cxxflags
+*.files
+*.includes
+taskmaster
