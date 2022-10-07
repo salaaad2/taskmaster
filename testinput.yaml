@@ -2,5 +2,12 @@ supervisor-processes:
   list:
     name: "ls"
     full_path: "/bin/ls"
-    start_command: "-l --color=auto"
+    start_command: ["-l", "--color=auto"]
     expected_return: 0
+    exec_on_startup: true
+  animal:
+    name: "cat"
+    full_path: "/bin/echo"
+    start_command: ["-e", "testinput.yaml"]
+    expected_return: 0
+    exec_on_startup: true

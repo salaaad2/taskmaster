@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <vector>
 
 using std::string;
 
@@ -14,14 +15,20 @@ public:
         Process(
             bool isAlive,
             bool restartOnError,
+            bool execOnStartup,
             int expectedReturn,
             long double startTime,
             const string &fullPath,
             const string &processName,
-            const string &startCommand,
             const string &workingDir,
-            const string &additionalEnv);
+            const string &additionalEnv,
+            const std::vector<string> &commandArgs);
         ~Process();
+
+        /*
+        ** business logic
+        */
+        int start();
 
         /*
         ** get/setters
@@ -30,6 +37,8 @@ public:
         void setIsAlive(bool newIsAlive);
         bool getRestartOnError() const;
         void setRestartOnError(bool newRestartOnError);
+        bool getExecOnStartup() const;
+        void setExecOnStartup(bool newExecOnStartup);
         int getExpectedReturn() const;
         void setExpectedReturn(int newExpectedReturn);
         long double getStartTime() const;
@@ -38,12 +47,12 @@ public:
         void setFullPath(const string &newFullPath);
         const string &getProcessName() const;
         void setProcessName(const string &newProcessName);
-        const string &getStartCommand() const;
-        void setStartCommand(const string &newStartCommand);
         const string &getWorkingDir() const;
         void setWorkingDir(const string &newWorkingDir);
         const string &getAdditionalEnv() const;
         void setAdditionalEnv(const string &newAdditionalEnv);
+        const std::vector<string> &getCommandArguments() const;
+        void appendCommandArgument(const string &newStartCommand);
 private:
 
         /*
@@ -51,13 +60,14 @@ private:
         */
         bool mIsAlive;
         bool mRestartOnError;
+        bool mExecOnStartup;
         int mExpectedReturn;
         long double mStartTime;
         string mFullPath;
         string mProcessName;
-        string mStartCommand;
         string mWorkingDir;
         string mAdditionalEnv;
+        std::vector<string> mCommandArguments;
 };
 
 std::ostream & operator<<(std::ostream & s, const Process & src);

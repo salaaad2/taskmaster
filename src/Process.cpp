@@ -1,46 +1,70 @@
 #include "Process.hpp"
 
+#include <unistd.h>
+#include <vector>
+
 Process::Process() :
     mIsAlive(false),
     mRestartOnError(false),
+    mExecOnStartup(0),
     mExpectedReturn(0),
     mStartTime(0.00),
     mFullPath(""),
     mProcessName(""),
-    mStartCommand(""),
     mWorkingDir(""),
-    mAdditionalEnv("")
+    mAdditionalEnv(""),
+    mCommandArguments(std::vector<string>())
 {}
 
 Process::Process(
         bool isAlive,
         bool restartOnError,
+        bool execOnStartup,
         int expectedReturn,
         long double startTime,
         const string &fullPath,
         const string &name,
-        const string &startCommand,
         const string &workingDir,
-        const string &additionalEnv) :
+        const string &additionalEnv,
+        const std::vector<string> &commandArgs) :
     mIsAlive(isAlive),
     mRestartOnError(restartOnError),
+    mExecOnStartup(execOnStartup),
     mExpectedReturn(expectedReturn),
     mStartTime(startTime),
     mFullPath(fullPath),
     mProcessName(name),
-    mStartCommand(startCommand),
     mWorkingDir(workingDir),
-    mAdditionalEnv(additionalEnv)
+    mAdditionalEnv(additionalEnv),
+    mCommandArguments(commandArgs)
 {}
 
 Process::~Process() {}
+
+int Process::start()
+{
+    int pid;
+
+    pid = fork();
+    switch(pid)
+    {
+        case (0):
+            system(mFullPath.c_str());
+            break;
+        case (-1):
+            break;
+        default:
+            break;
+    }
+    return (0);
+}
 
 std::ostream & operator<<(std::ostream & s, const Process & src)
 {
     s << "Process:{ name: " << src.getProcessName()
       << ", isAlive: " << src.isAlive()
       << ", full_path: " << src.getFullPath()
-      << ", start_command: " << src.getStartCommand()
+      << ", start_command: " << src.getCommandArguments().front()
       << " }\n";
     return s;
 }
@@ -63,6 +87,16 @@ bool Process::getRestartOnError() const
 void Process::setRestartOnError(bool newRestartOnError)
 {
     mRestartOnError = newRestartOnError;
+}
+
+bool Process::getExecOnStartup() const
+{
+    return mExecOnStartup;
+}
+
+void Process::setExecOnStartup(bool newExecOnStartup)
+{
+    mExecOnStartup = newExecOnStartup;
 }
 
 int Process::getExpectedReturn() const
@@ -105,14 +139,14 @@ void Process::setProcessName(const string &newProcessName)
     mProcessName = newProcessName;
 }
 
-const string &Process::getStartCommand() const
+const std::vector<string> &Process::getCommandArguments() const
 {
-    return mStartCommand;
+    return mCommandArguments;
 }
 
-void Process::setStartCommand(const string &newStartCommand)
+void Process::appendCommandArgument(const string &newStartCommand)
 {
-    mStartCommand = newStartCommand;
+    mCommandArguments.push_back(newStartCommand);
 }
 
 const string &Process::getWorkingDir() const
