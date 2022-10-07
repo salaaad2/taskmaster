@@ -15,7 +15,7 @@ int main(int ac, char *av[])
     }
     else
     {
-        s.start();
+        s.init();
     }
     return 0;
 }

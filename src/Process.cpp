@@ -6,6 +6,7 @@ Process::Process() :
     mExpectedReturn(0),
     mStartTime(0.00),
     mFullPath(""),
+    mProcessName(""),
     mStartCommand(""),
     mWorkingDir(""),
     mAdditionalEnv("")
@@ -17,6 +18,7 @@ Process::Process(
         int expectedReturn,
         long double startTime,
         const string &fullPath,
+        const string &name,
         const string &startCommand,
         const string &workingDir,
         const string &additionalEnv) :
@@ -25,12 +27,23 @@ Process::Process(
     mExpectedReturn(expectedReturn),
     mStartTime(startTime),
     mFullPath(fullPath),
+    mProcessName(name),
     mStartCommand(startCommand),
     mWorkingDir(workingDir),
     mAdditionalEnv(additionalEnv)
 {}
 
 Process::~Process() {}
+
+std::ostream & operator<<(std::ostream & s, const Process & src)
+{
+    s << "Process:{ name: " << src.getProcessName()
+      << ", isAlive: " << src.isAlive()
+      << ", full_path: " << src.getFullPath()
+      << ", start_command: " << src.getStartCommand()
+      << " }\n";
+    return s;
+}
 
 bool Process::isAlive() const
 {
@@ -80,6 +93,16 @@ const string &Process::getFullPath() const
 void Process::setFullPath(const string &newFullPath)
 {
     mFullPath = newFullPath;
+}
+
+const string &Process::getProcessName() const
+{
+    return mProcessName;
+}
+
+void Process::setProcessName(const string &newProcessName)
+{
+    mProcessName = newProcessName;
 }
 
 const string &Process::getStartCommand() const

@@ -2,5 +2,5 @@ supervisor-processes:
   list:
     name: "ls"
     full_path: "/bin/ls"
-    args: "-l --color=auto"
-    sucessful_return: 0
+    start_command: "-l --color=auto"
+    expected_return: 0

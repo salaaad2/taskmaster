@@ -5,7 +5,9 @@
 Supervisor::Supervisor() {}
 
 Supervisor::Supervisor(const string config_path)
-    : mLogFilePath("./"), mConfigFilePath(config_path), mIsConfigValid(false)
+    : mIsConfigValid(false),
+      mConfigFilePath(config_path),
+      mLogFilePath("./")
 {
     loadConfig(mConfigFilePath);
 }
@@ -13,14 +15,13 @@ Supervisor::Supervisor(const string config_path)
 Supervisor::~Supervisor() {}
 
 int Supervisor::isConfigValid()
-{return mIsConfigValid;}
+{
+    return mIsConfigValid;
+}
 
-void Supervisor::start() {}
+void Supervisor::init() {}
 
-int Supervisor::writeToLog()
-{return (0);}
-
-int Supervisor::loadConfig(const string & config_path) const
+int Supervisor::loadConfig(const string & config_path)
 {
     YAML::Node config = YAML::LoadFile(config_path);
 
@@ -29,11 +30,18 @@ int Supervisor::loadConfig(const string & config_path) const
     {
         for (auto it = processes_node.begin(); it != processes_node.end(); ++it)
         {
-            // std::shared_ptr<Process> new_process = new Process();
-            std::cout << it->first << ":" << it->second["full_path"] << "\n";
-
-            // mProcessList.push_back(new_process);
+            std::shared_ptr<Process> new_process = std::make_shared<Process>(Process());
+            new_process->setFullPath(it->second["full_path"].as<std::string>());
+            new_process->setProcessName(it->second["name"].as<std::string>());
+            new_process->setStartCommand(it->second["start_command"].as<std::string>());
+            new_process->setExpectedReturn(it->second["expected_return"].as<int>());
+            std::cout << *new_process.get();
+            mProcessList.push_back(new_process);
         }
+    }
+    else
+    {
+        mIsConfigValid = false;
     }
     return (0);
 }
@@ -49,5 +57,10 @@ int Supervisor::killAllProcesses(bool restart)
     {
         // for (auto : )
     }
+    return (0);
+}
+
+int Supervisor::writeToLog()
+{
     return (0);
 }

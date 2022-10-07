@@ -1,31 +1,44 @@
 #pragma once
 
 #include <iostream>
+#include <memory>
 #include <vector>
 #include <list>
+#include "Process.hpp"
 
-class Process;
 
 using std::string;
 
 class Supervisor {
     public:
+
+        /*
+        ** xtors
+        */
         Supervisor();
         Supervisor(const string config_path);
         ~Supervisor();
 
+        /*
+        ** business logic
+        */
         int isConfigValid();
-        void start();
+        void init();
     private:
-        // functions
-        int writeToLog();
-        int loadConfig(const string & config_path) const ;
-        int killAllProcesses(bool restart);
 
-        // members
-        const string          mLogFilePath;
-        string                mConfigFilePath;
-        std::vector<string>   mCommandHistory;
-        //std::list<Process>         mProcessList;
-        bool                       mIsConfigValid;
+        /*
+        ** private functions
+        */
+        int loadConfig(const string & config_path);
+        int killAllProcesses(bool restart);
+        int writeToLog();
+
+        /*
+        ** class members
+        */
+        bool mIsConfigValid;
+        string mConfigFilePath;
+        const string mLogFilePath;
+        std::vector<string> mCommandHistory;
+        std::list<std::shared_ptr<Process> > mProcessList;
 };
