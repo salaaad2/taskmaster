@@ -37,7 +37,6 @@ void Supervisor::init()
         }
         else
         {
-            std::cout << "taskmaster: Process [" << p->getProcessName() << "] started" << std::endl;
         }
     }
 }

@@ -7,7 +7,7 @@ supervisor-processes:
     exec_on_startup: true
   animal:
     name: "cat"
-    full_path: "/bin/echo"
+    full_path: "/bin/cat"
     start_command: ["-e", "testinput.yaml"]
     expected_return: 0
     exec_on_startup: true

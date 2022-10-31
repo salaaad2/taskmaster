@@ -6,7 +6,7 @@
 Process::Process() :
     mIsAlive(false),
     mRestartOnError(false),
-    mExecOnStartup(0),
+    mExecOnStartup(false),
     mExpectedReturn(0),
     mStartTime(0.00),
     mFullPath(""),
@@ -44,19 +44,35 @@ Process::~Process() {}
 int Process::start()
 {
     int pid;
+	int pipe_fds[2];
+	char out[4096];
 
-    pid = fork();
-    switch(pid)
-    {
-        case (0):
-            system(mFullPath.c_str());
-            break;
-        case (-1):
-            break;
-        default:
-            break;
-    }
-    return (0);
+	if (pipe(pipe_fds) < 0)
+	{
+		std::cerr << "error: pipe\n";
+		return 1;
+		//return error(ERROR_FATAL, "Internal Error", "fork()")
+	}
+	if ((pid = fork()) < 0)
+	{
+		std::cerr << "error: fork\n";
+		return 1;
+		//return error(ERROR_FATAL, "Internal Error", "fork()")
+	}
+
+	if (pid == 0)
+	{
+		dup2 (pipe_fds[1], 1);
+		close(pipe_fds[0]);
+		close(pipe_fds[1]);
+		execl(mFullPath.c_str(), mProcessName.c_str(), mCommandArguments.back().c_str(), (char *)0);
+	} else {
+		close(pipe_fds[1]);
+		int nbytes = read(pipe_fds[0], out, sizeof(out));
+		printf("Output: (%.*s)\n", nbytes, out);
+		wait(NULL);
+	}
+    return 0;
 }
 
 std::ostream & operator<<(std::ostream & s, const Process & src)
