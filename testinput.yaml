@@ -2,7 +2,7 @@ supervisor-processes:
   list:
     name: "ls"
     full_path: "/bin/ls"
-    start_command: ["-l", "--color=auto"]
+    start_command: ["-l", "-a"]
     expected_return: 0
     exec_on_startup: true
   animal:

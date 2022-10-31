@@ -1,4 +1,5 @@
 #include "Process.hpp"
+#include "StringUtils.hpp"
 
 #include <unistd.h>
 #include <vector>
@@ -62,10 +63,10 @@ int Process::start()
 
 	if (pid == 0)
 	{
-		dup2 (pipe_fds[1], 1);
+		dup2(pipe_fds[1], 1);
 		close(pipe_fds[0]);
 		close(pipe_fds[1]);
-		execl(mFullPath.c_str(), mProcessName.c_str(), mCommandArguments.back().c_str(), (char *)0);
+		execl(mFullPath.c_str(), mProcessName.c_str(), mCommandArguments.front().c_str(), (char *)0);
 	} else {
 		close(pipe_fds[1]);
 		int nbytes = read(pipe_fds[0], out, sizeof(out));
