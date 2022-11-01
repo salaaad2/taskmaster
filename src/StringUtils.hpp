@@ -1,17 +1,23 @@
 #pragma once
 
+#include <iostream>
+#include <vector>
+
 template <typename T>
-std::string JoinStrings(
+std::vector<const char*> JoinStrings(
+		const std::string & name,
 		const T & source,
-		const std::string & separator = " ",
+		const std::string & separator = "",
 		const std::string & terminator = "")
 {
-	std::string out;
+	(void)separator;
+	(void)terminator;
+	std::vector<const char*> out;
+	out.push_back(name.c_str());
 	for (auto it = source.begin(); it != source.end(); ++it)
 	{
-		out.append(separator);
-		out.append(*it);
+		out.push_back((*it).c_str());
 	}
-	out.append(terminator);
+	out.push_back(NULL);
 	return out;
 }

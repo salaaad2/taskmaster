@@ -11,3 +11,9 @@ supervisor-processes:
     start_command: ["-e", "testinput.yaml"]
     expected_return: 0
     exec_on_startup: true
+  dog:
+    name: "bat"
+    full_path: "/usr/bin/bat"
+    start_command: ["testinput.yaml"]
+    expected_return: 0
+    exec_on_startup: true

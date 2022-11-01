@@ -4,16 +4,20 @@
 #include <unistd.h>
 #include <vector>
 
+#include <sys/wait.h>
+
 Process::Process() :
     mIsAlive(false),
     mRestartOnError(false),
     mExecOnStartup(false),
+    mHasStandardStreams(true),
     mExpectedReturn(0),
     mStartTime(0.00),
     mFullPath(""),
     mProcessName(""),
     mWorkingDir(""),
     mAdditionalEnv(""),
+    mOutputStreamRedirectPath(""),
     mCommandArguments(std::vector<string>())
 {}
 
@@ -21,22 +25,26 @@ Process::Process(
         bool isAlive,
         bool restartOnError,
         bool execOnStartup,
+        bool hasStandardStreams,
         int expectedReturn,
         long double startTime,
         const string &fullPath,
         const string &name,
         const string &workingDir,
         const string &additionalEnv,
+        const string &outputRedirectPath,
         const std::vector<string> &commandArgs) :
     mIsAlive(isAlive),
     mRestartOnError(restartOnError),
     mExecOnStartup(execOnStartup),
+    mHasStandardStreams(hasStandardStreams),
     mExpectedReturn(expectedReturn),
     mStartTime(startTime),
     mFullPath(fullPath),
     mProcessName(name),
     mWorkingDir(workingDir),
     mAdditionalEnv(additionalEnv),
+    mOutputStreamRedirectPath(outputRedirectPath),
     mCommandArguments(commandArgs)
 {}
 
@@ -45,34 +53,51 @@ Process::~Process() {}
 int Process::start()
 {
     int pid;
-	int pipe_fds[2];
-	char out[4096];
+    int pipe_fds[2];
+    char out[4096];
 
-	if (pipe(pipe_fds) < 0)
-	{
-		std::cerr << "error: pipe\n";
-		return 1;
-		//return error(ERROR_FATAL, "Internal Error", "fork()")
-	}
-	if ((pid = fork()) < 0)
-	{
-		std::cerr << "error: fork\n";
-		return 1;
-		//return error(ERROR_FATAL, "Internal Error", "fork()")
-	}
+    if (getHasStandardStreams())
+    {
+       if (pipe(pipe_fds) < 0)
+       {
+        std::cerr << "error: pipe\n";
+        return 1;
+        // return error(ERROR_FATAL, "Internal Error", "fork()")
+       }
+    }
+    if ((pid = fork()) < 0)
+    {
+       std::cerr << "error: fork\n";
+       return 1;
+       // return error(ERROR_FATAL, "Internal Error", "fork()")
+    }
 
-	if (pid == 0)
-	{
-		dup2(pipe_fds[1], 1);
-		close(pipe_fds[0]);
-		close(pipe_fds[1]);
-		execl(mFullPath.c_str(), mProcessName.c_str(), mCommandArguments.front().c_str(), (char *)0);
-	} else {
-		close(pipe_fds[1]);
-		int nbytes = read(pipe_fds[0], out, sizeof(out));
-		printf("Output: (%.*s)\n", nbytes, out);
-		wait(NULL);
-	}
+    if (pid == 0)
+    {
+       if (!getHasStandardStreams() && getOutputRedirectPath().size() != 0)
+       {
+           //handleChildPipes();
+           dup2(pipe_fds[1], 1);
+           close(pipe_fds[0]);
+           close(pipe_fds[1]);
+       }
+       std::vector<const char*> arg_v = JoinStrings(mProcessName, getCommandArguments(), "" , "");
+       execv(mFullPath.c_str(),
+           const_cast<char*const*>(arg_v.data()));
+    }
+    else
+    {
+       if (!getHasStandardStreams() && getOutputRedirectPath().size() != 0)
+       {
+           // handleParentPipes();
+           close(pipe_fds[1]);
+           int nbytes = read(pipe_fds[0], out, sizeof(out));
+           printf("process_output:\n%.*s\n", nbytes, out);
+       }
+       int ret= 0;
+       waitpid(pid, &ret, 0);
+       std::cout << "return : " << ret << "\n";
+    }
     return 0;
 }
 
@@ -116,6 +141,16 @@ void Process::setExecOnStartup(bool newExecOnStartup)
     mExecOnStartup = newExecOnStartup;
 }
 
+bool Process::getHasStandardStreams() const
+{
+    return mHasStandardStreams;
+}
+
+void Process::setHasStandardStreams(bool newHasStandardStreams)
+{
+    mHasStandardStreams = newHasStandardStreams;
+}
+
 int Process::getExpectedReturn() const
 {
     return mExpectedReturn;
@@ -156,16 +191,6 @@ void Process::setProcessName(const string &newProcessName)
     mProcessName = newProcessName;
 }
 
-const std::vector<string> &Process::getCommandArguments() const
-{
-    return mCommandArguments;
-}
-
-void Process::appendCommandArgument(const string &newStartCommand)
-{
-    mCommandArguments.push_back(newStartCommand);
-}
-
 const string &Process::getWorkingDir() const
 {
     return mWorkingDir;
@@ -184,4 +209,24 @@ const string &Process::getAdditionalEnv() const
 void Process::setAdditionalEnv(const string &newAdditionalEnv)
 {
     mAdditionalEnv = newAdditionalEnv;
+}
+
+const string &Process::getOutputRedirectPath() const
+{
+    return mOutputStreamRedirectPath;
+}
+
+void Process::setOutputRedirectPath(const string &newOutputRedirectPath)
+{
+    mOutputStreamRedirectPath = newOutputRedirectPath;
+}
+
+const std::vector<string> &Process::getCommandArguments() const
+{
+    return mCommandArguments;
+}
+
+void Process::appendCommandArgument(const string &newStartCommand)
+{
+    mCommandArguments.push_back(newStartCommand);
 }

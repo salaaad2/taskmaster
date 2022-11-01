@@ -28,11 +28,11 @@ OBJS_DIR		 = obj/
 SRCS_NAME		 = main
 SRCS_NAME		 += Process
 SRCS_NAME		 += Supervisor
-SRCS_NAME		 += StringUtils
 #------------------------------------------------------------------------------#
 INCS_NAME		 = main
 INCS_NAME		 += Process
 INCS_NAME		 += Supervisor
+INCS_NAME		 += StringUtils
 SRCS			 = $(addprefix ${SRCS_DIR}, $(addsuffix .cpp, ${SRCS_NAME}))
 #------------------------------------------------------------------------------#
 #------------------------------------------------------------------------------#

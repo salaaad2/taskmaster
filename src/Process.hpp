@@ -16,12 +16,14 @@ public:
             bool isAlive,
             bool restartOnError,
             bool execOnStartup,
+            bool hasStandardStreams,
             int expectedReturn,
             long double startTime,
             const string &fullPath,
             const string &processName,
             const string &workingDir,
             const string &additionalEnv,
+            const string &outputRedirectPath,
             const std::vector<string> &commandArgs);
         ~Process();
 
@@ -39,6 +41,8 @@ public:
         void setRestartOnError(bool newRestartOnError);
         bool getExecOnStartup() const;
         void setExecOnStartup(bool newExecOnStartup);
+        bool getHasStandardStreams() const;
+        void setHasStandardStreams(bool newHasStandardStreams);
         int getExpectedReturn() const;
         void setExpectedReturn(int newExpectedReturn);
         long double getStartTime() const;
@@ -51,6 +55,8 @@ public:
         void setWorkingDir(const string &newWorkingDir);
         const string &getAdditionalEnv() const;
         void setAdditionalEnv(const string &newAdditionalEnv);
+        const string &getOutputRedirectPath() const;
+        void setOutputRedirectPath(const string &newOutputRedirectPath);
         const std::vector<string> &getCommandArguments() const;
         void appendCommandArgument(const string &newStartCommand);
 private:
@@ -61,12 +67,14 @@ private:
         bool mIsAlive;
         bool mRestartOnError;
         bool mExecOnStartup;
+        bool mHasStandardStreams;
         int mExpectedReturn;
         long double mStartTime;
         string mFullPath;
         string mProcessName;
         string mWorkingDir;
         string mAdditionalEnv;
+        string mOutputStreamRedirectPath;
         std::vector<string> mCommandArguments;
 };
 
