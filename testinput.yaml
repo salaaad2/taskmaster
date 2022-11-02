@@ -20,16 +20,16 @@ supervisor-processes:
     number_of_restarts: 1
     exec_on_startup: true
   dog:
-    name: "cat"
+    name: "cool"
     full_path: "/bin/cat"
     start_command: ["-e", "cool"]
     expected_return: 0
     has_standard_streams: true
     output_redirect_path: ""
     restart_on_error: true
-    number_of_restarts: 12
+    number_of_restarts: 3
     exec_on_startup: true
-  dog:
+  irc:
     name: "ircserv"
     full_path: "./ircserv"
     start_command: ["6667", "asd"]

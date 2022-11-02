@@ -32,10 +32,15 @@ class Supervisor {
         /*
         ** private functions
         */
-        int startProcess(std::shared_ptr<Process> & process);
         int loadConfig(const string & config_path);
         int killAllProcesses(bool restart);
         int writeToLog();
+
+        /*
+        ** functions called by REPL
+        */
+        int startProcess(std::shared_ptr<Process> & process);
+        int printHelp(std::shared_ptr<Process> & process);
 
         /*
         ** class members
@@ -44,7 +49,6 @@ class Supervisor {
         string mConfigFilePath;
         const string mLogFilePath;
         std::vector<string> mCommandHistory;
-        std::list<std::shared_ptr<Process> > mProcessList;
-        std::map<string, string> mProcessMap;
+        std::map<string, std::shared_ptr<Process>> mProcessMap;
         std::map<string, std::function<int(std::shared_ptr<Process>&)>> mCommandMap;
 };

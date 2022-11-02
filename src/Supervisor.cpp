@@ -1,5 +1,6 @@
 #include "Supervisor.hpp"
 #include "Process.hpp"
+#include "StringUtils.hpp"
 #include "Utils.hpp"
 #include <functional>
 #include <memory>
@@ -23,9 +24,25 @@ int Supervisor::isConfigValid()
     return mIsConfigValid;
 }
 
+int Supervisor::printHelp(std::shared_ptr<Process> & process)
+{
+    std::string out;
+    if (process)
+    {
+        std::cout << "cool process you got there";
+    }
+    out += "Taskmaster\n\t";
+    out += "available commands:\n";
+    out += "\t\thelp: Print this help\n";
+    out += "\t\tstart: start process by name\n";
+    out += "\t\tlist: list processes\n";
+    std::cout << out;
+    return 0;
+}
+
 void Supervisor::init()
 {
-    for (auto p : mProcessList)
+    for (auto& [key, p]: mProcessMap)
     {
         if (p->getExecOnStartup() == false)
         {
@@ -34,6 +51,7 @@ void Supervisor::init()
         startProcess(p);
     }
     // init REPL
+    mCommandMap["help"] = std::bind(&Supervisor::printHelp, this, std::placeholders::_1);
     mCommandMap["start"] = std::bind(&Supervisor::startProcess, this, std::placeholders::_1);
     // start REPL
     std::string line;
@@ -42,11 +60,20 @@ void Supervisor::init()
          std::getline(std::cin, line);
          std::cout << "taskmasterctl>$ ")
     {
-        if (mCommandMap.find("start") != mCommandMap.end())
-        {
-            //mCommandMap["start"](mProcessList.findWithName())
-        }
         std::cout << line << std::endl;
+        auto split_command = SplitString(line, " ");
+        if (split_command.size() == 0)
+        {
+            continue ;
+        }
+        for (auto it = mCommandMap.begin(); it != mCommandMap.end(); ++it)
+        {
+            if ((*it).first == split_command.front())
+            {
+                std::cout << "call command\n";
+                mCommandMap[(*it).first](mProcessMap[split_command.back()]);
+            }
+        }
     }
 }
 
@@ -101,9 +128,9 @@ int Supervisor::loadConfig(const string & config_path)
             new_process->appendCommandArgument(c.as<string>());
         }
         std::cout << *new_process.get();
-        mProcessList.push_back(new_process);
+        mProcessMap[new_process->getProcessName()] = new_process;
     }
-    mIsConfigValid = (mProcessList.size() > 0);
+    mIsConfigValid = (mProcessMap.size() > 0);
     return (0);
 }
 

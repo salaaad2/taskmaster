@@ -1,7 +1,12 @@
 #pragma once
 
 #include <iostream>
+#include <string>
 #include <vector>
+
+std::vector<std::string> SplitString(
+	std::string source,
+	const std::string &separator);
 
 template <typename T>
 std::vector<const char*> JoinStrings(
@@ -21,3 +26,4 @@ std::vector<const char*> JoinStrings(
 	out.push_back(NULL);
 	return out;
 }
+
