@@ -1,5 +1,9 @@
 #include "Supervisor.hpp"
+#include "Process.hpp"
+#include "Utils.hpp"
+#include <functional>
 #include <memory>
+#include <string>
 #include <yaml-cpp/yaml.h>
 
 Supervisor::Supervisor() {}
@@ -23,22 +27,50 @@ void Supervisor::init()
 {
     for (auto p : mProcessList)
     {
-        int r = 0;
         if (p->getExecOnStartup() == false)
         {
             continue;
         }
-        r = p->start();
-        if (r != p->getExpectedReturn())
+        startProcess(p);
+    }
+    // init REPL
+    mCommandMap["start"] = std::bind(&Supervisor::startProcess, this, std::placeholders::_1);
+    // start REPL
+    std::string line;
+    std::cout << "taskmasterctl>$ ";
+    for (std::string line;
+         std::getline(std::cin, line);
+         std::cout << "taskmasterctl>$ ")
+    {
+        if (mCommandMap.find("start") != mCommandMap.end())
         {
-            // FIXME: error printing in functions
-            std::cout << "taskmaster: Process [" << p->getProcessName() << "] failed to start\n"
-                    << "  Expected: {" << p->getExpectedReturn() << "} Actual: {" << r << "}" << std::endl;
+            //mCommandMap["start"](mProcessList.findWithName())
+        }
+        std::cout << line << std::endl;
+    }
+}
+
+int Supervisor::startProcess(std::shared_ptr<Process> & process)
+{
+    int process_return_val = 0;
+    int number_of_restarts = process->getRestartOnError() ?
+        process->getNumberOfRestarts() :
+        1;
+
+    for (auto i = 0; i < number_of_restarts; i++)
+    {
+        process_return_val = process->start();
+        if (process_return_val != process->getExpectedReturn())
+        {
+            Utils::PrintError(process->getProcessName(), std::to_string(process->getExpectedReturn()));
         }
         else
         {
+            Utils::PrintSuccess(process->getProcessName(), "started successfully");
+            break;
         }
     }
+    return process_return_val != process->getExpectedReturn();
 }
 
 int Supervisor::loadConfig(const string & config_path)
@@ -58,6 +90,8 @@ int Supervisor::loadConfig(const string & config_path)
         new_process->setProcessName(it->second["name"].as<string>());
         new_process->setExpectedReturn(it->second["expected_return"].as<int>());
         new_process->setExecOnStartup(it->second["exec_on_startup"].as<bool>());
+        new_process->setNumberOfRestarts(it->second["number_of_restarts"].as<int>());
+        new_process->setRestartOnError(it->second["restart_on_error"].as<bool>());
         auto start_command = it->second["start_command"];
         for (auto c : start_command)
         {

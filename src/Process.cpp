@@ -1,6 +1,7 @@
 #include "Process.hpp"
 #include "StringUtils.hpp"
 
+#include <cstdlib>
 #include <unistd.h>
 #include <vector>
 
@@ -12,6 +13,7 @@ Process::Process() :
     mExecOnStartup(false),
     mHasStandardStreams(true),
     mExpectedReturn(0),
+    mNumberOfRestarts(0),
     mStartTime(0.00),
     mFullPath(""),
     mProcessName(""),
@@ -27,6 +29,7 @@ Process::Process(
         bool execOnStartup,
         bool hasStandardStreams,
         int expectedReturn,
+        int numberOfRestarts,
         long double startTime,
         const string &fullPath,
         const string &name,
@@ -39,6 +42,7 @@ Process::Process(
     mExecOnStartup(execOnStartup),
     mHasStandardStreams(hasStandardStreams),
     mExpectedReturn(expectedReturn),
+    mNumberOfRestarts(numberOfRestarts),
     mStartTime(startTime),
     mFullPath(fullPath),
     mProcessName(name),
@@ -50,7 +54,7 @@ Process::Process(
 
 Process::~Process() {}
 
-int Process::start()
+int Process::start() const
 {
     int pid;
     int pipe_fds[2];
@@ -72,6 +76,7 @@ int Process::start()
        // return error(ERROR_FATAL, "Internal Error", "fork()")
     }
 
+    int ret = 0;
     if (pid == 0)
     {
        if (!getHasStandardStreams() && getOutputRedirectPath().size() != 0)
@@ -94,11 +99,18 @@ int Process::start()
            int nbytes = read(pipe_fds[0], out, sizeof(out));
            printf("process_output:\n%.*s\n", nbytes, out);
        }
-       int ret= 0;
        waitpid(pid, &ret, 0);
-       std::cout << "return : " << ret << "\n";
+       if (WIFEXITED(ret))
+       {
+          ret = WEXITSTATUS(ret);
+       }
     }
-    return 0;
+    return ret;
+}
+
+int Process::attemptLaunch() const
+{
+    return (0);
 }
 
 std::ostream & operator<<(std::ostream & s, const Process & src)
@@ -159,6 +171,16 @@ int Process::getExpectedReturn() const
 void Process::setExpectedReturn(int newExpectedReturn)
 {
     mExpectedReturn = newExpectedReturn;
+}
+
+int Process::getNumberOfRestarts() const
+{
+    return mNumberOfRestarts;
+}
+
+void Process::setNumberOfRestarts(int newNumberOfRestarts)
+{
+    mNumberOfRestarts = newNumberOfRestarts;
 }
 
 long double Process::getStartTime() const

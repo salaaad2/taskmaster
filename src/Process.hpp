@@ -18,6 +18,7 @@ public:
             bool execOnStartup,
             bool hasStandardStreams,
             int expectedReturn,
+            int numberOfRestarts,
             long double startTime,
             const string &fullPath,
             const string &processName,
@@ -30,7 +31,8 @@ public:
         /*
         ** business logic
         */
-        int start();
+        int start() const ;
+        int stop() const ;
 
         /*
         ** get/setters
@@ -45,6 +47,8 @@ public:
         void setHasStandardStreams(bool newHasStandardStreams);
         int getExpectedReturn() const;
         void setExpectedReturn(int newExpectedReturn);
+        int getNumberOfRestarts() const;
+        void setNumberOfRestarts(int newNumberOfRestarts);
         long double getStartTime() const;
         void setStartTime(long double newStartTime);
         const string &getFullPath() const;
@@ -60,6 +64,10 @@ public:
         const std::vector<string> &getCommandArguments() const;
         void appendCommandArgument(const string &newStartCommand);
 private:
+        /*
+        ** private functions
+        */
+        int attemptLaunch() const ;
 
         /*
         ** class members
@@ -69,6 +77,7 @@ private:
         bool mExecOnStartup;
         bool mHasStandardStreams;
         int mExpectedReturn;
+        int mNumberOfRestarts;
         long double mStartTime;
         string mFullPath;
         string mProcessName;

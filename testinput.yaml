@@ -4,16 +4,22 @@ supervisor-processes:
     full_path: "/bin/ls"
     start_command: ["-l", "-a"]
     expected_return: 0
+    restart_on_error: true
+    number_of_restarts: 1
     exec_on_startup: true
   animal:
     name: "cat"
     full_path: "/bin/cat"
     start_command: ["-e", "testinput.yaml"]
     expected_return: 0
+    restart_on_error: true
+    number_of_restarts: 1
     exec_on_startup: true
   dog:
-    name: "bat"
-    full_path: "/usr/bin/bat"
-    start_command: ["testinput.yaml"]
+    name: "cat"
+    full_path: "/bin/cat"
+    start_command: ["-e", "cool"]
     expected_return: 0
+    restart_on_error: true
+    number_of_restarts: 12
     exec_on_startup: true
