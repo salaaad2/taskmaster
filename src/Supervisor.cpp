@@ -88,6 +88,9 @@ int Supervisor::loadConfig(const string & config_path)
         std::shared_ptr<Process> new_process = std::make_shared<Process>(Process());
         new_process->setFullPath(it->second["full_path"].as<string>());
         new_process->setProcessName(it->second["name"].as<string>());
+        new_process->setHasStandardStreams(it->second["has_standard_streams"].as<bool>());
+        new_process->setOutputRedirectPath(it->second["output_redirect_path"].as<string>());
+        new_process->setExpectedReturn(it->second["expected_return"].as<int>());
         new_process->setExpectedReturn(it->second["expected_return"].as<int>());
         new_process->setExecOnStartup(it->second["exec_on_startup"].as<bool>());
         new_process->setNumberOfRestarts(it->second["number_of_restarts"].as<int>());

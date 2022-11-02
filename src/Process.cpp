@@ -98,8 +98,12 @@ int Process::start() const
            close(pipe_fds[1]);
            int nbytes = read(pipe_fds[0], out, sizeof(out));
            printf("process_output:\n%.*s\n", nbytes, out);
+           return 0;
        }
-       waitpid(pid, &ret, 0);
+       else
+       {
+           waitpid(pid, &ret, 0);
+       }
        if (WIFEXITED(ret))
        {
           ret = WEXITSTATUS(ret);

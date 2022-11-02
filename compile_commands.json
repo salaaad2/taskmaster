@@ -1,0 +1,99 @@
+[
+  {
+    "arguments": [
+      "/usr/lib64/ccache/clang++",
+      "-c",
+      "-std=c++17",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-pedantic",
+      "-I",
+      "ext/yaml-cpp/include/",
+      "-o",
+      "obj/main.o",
+      "src/main.cpp"
+    ],
+    "directory": "/home/salad/docs/42projects/taskmaster",
+    "file": "/home/salad/docs/42projects/taskmaster/src/main.cpp",
+    "output": "/home/salad/docs/42projects/taskmaster/obj/main.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/clang++",
+      "-std=c++17",
+      "-Wall",
+      "-Wextra",
+      "-pedantic",
+      "-Werror",
+      "-I",
+      "ext/yaml-cpp/include/",
+      "-c",
+      "-fcolor-diagnostics",
+      "-o",
+      "obj/main.o",
+      "src/main.cpp"
+    ],
+    "directory": "/home/salad/docs/42projects/taskmaster",
+    "file": "/home/salad/docs/42projects/taskmaster/src/main.cpp",
+    "output": "/home/salad/docs/42projects/taskmaster/obj/main.o"
+  },
+  {
+    "arguments": [
+      "/usr/lib64/ccache/clang++",
+      "-c",
+      "-std=c++17",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-pedantic",
+      "-I",
+      "ext/yaml-cpp/include/",
+      "-o",
+      "obj/Process.o",
+      "src/Process.cpp"
+    ],
+    "directory": "/home/salad/docs/42projects/taskmaster",
+    "file": "/home/salad/docs/42projects/taskmaster/src/Process.cpp",
+    "output": "/home/salad/docs/42projects/taskmaster/obj/Process.o"
+  },
+  {
+    "arguments": [
+      "/usr/lib64/ccache/clang++",
+      "-c",
+      "-std=c++17",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-pedantic",
+      "-I",
+      "ext/yaml-cpp/include/",
+      "-o",
+      "obj/Supervisor.o",
+      "src/Supervisor.cpp"
+    ],
+    "directory": "/home/salad/docs/42projects/taskmaster",
+    "file": "/home/salad/docs/42projects/taskmaster/src/Supervisor.cpp",
+    "output": "/home/salad/docs/42projects/taskmaster/obj/Supervisor.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/clang++",
+      "-std=c++17",
+      "-Wall",
+      "-Wextra",
+      "-pedantic",
+      "-Werror",
+      "-I",
+      "ext/yaml-cpp/include/",
+      "-c",
+      "-fcolor-diagnostics",
+      "-o",
+      "obj/Supervisor.o",
+      "src/Supervisor.cpp"
+    ],
+    "directory": "/home/salad/docs/42projects/taskmaster",
+    "file": "/home/salad/docs/42projects/taskmaster/src/Supervisor.cpp",
+    "output": "/home/salad/docs/42projects/taskmaster/obj/Supervisor.o"
+  }
+]
