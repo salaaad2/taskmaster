@@ -59,57 +59,49 @@ int Process::start()
 {
     int pid;
     int pipe_fds[2];
-    char out[4096];
 
-    if (getHasStandardStreams())
+    if (pipe(pipe_fds) < 0)
     {
-       if (pipe(pipe_fds) < 0)
-       {
         std::cerr << "error: pipe\n";
         return 1;
         // return error(ERROR_FATAL, "Internal Error", "fork()")
-       }
     }
     if ((pid = fork()) < 0)
     {
-       std::cerr << "error: fork\n";
-       return 1;
-       // return error(ERROR_FATAL, "Internal Error", "fork()")
+        std::cerr << "error: fork\n";
+        return 1;
+        // return error(ERROR_FATAL, "Internal Error", "fork()")
     }
 
     int ret = 0;
     if (pid == 0)
     {
-       if (!getHasStandardStreams() && getOutputRedirectPath().size() != 0)
-       {
-           //handleChildPipes();
-           dup2(pipe_fds[1], 1);
-           close(pipe_fds[0]);
-           close(pipe_fds[1]);
-       }
-       std::vector<const char*> arg_v = Utils::ContainerToConstChar(mProcessName, getCommandArguments());
-       int e_ret = execv(
-           mFullPath.c_str(),
-           const_cast<char*const*>(arg_v.data()));
-       (void)e_ret;
-        exit(1);
+        int s = setsid();
+        (void)s;
+        //handleChildPipes();
+        dup2(pipe_fds[1], 1);
+        close(pipe_fds[0]);
+        close(pipe_fds[1]);
+
+        std::vector<const char*> arg_v = Utils::ContainerToConstChar(mProcessName, getCommandArguments());
+        int e_ret = execv(
+            mFullPath.c_str(),
+            const_cast<char*const*>(arg_v.data()));
+        exit(e_ret); /*127*/
     }
     else
     {
-       setIsAlive(true);
-       if (!getHasStandardStreams() && getOutputRedirectPath().size() != 0)
-       {
-           // handleParentPipes();
-           close(pipe_fds[1]);
-           int nbytes = read(pipe_fds[0], out, sizeof(out));
-           printf("process_output:\n%.*s\n", nbytes, out);
-       }
-       waitpid(pid, &ret, 0);
-       if (WIFEXITED(ret))
-       {
-          ret = WEXITSTATUS(ret);
-          setIsAlive(false);
-       }
+        setIsAlive(true);
+        // handleParentPipes();
+        if (WIFEXITED(ret))
+        {
+            setIsAlive(false);
+            ret = WEXITSTATUS(ret);
+        }
+        else
+        {
+            waitpid(pid, &ret, 0);
+        }
     }
     return ret;
 }
