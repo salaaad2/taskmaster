@@ -1,6 +1,7 @@
 #include "Process.hpp"
 
 #include <cstdlib>
+#include <sys/signal.h>
 #include <unistd.h>
 #include <vector>
 
@@ -59,6 +60,7 @@ int Process::start()
 {
     int pid;
     int pipe_fds[2];
+    signal(SIGCHLD, handle_sigchild);
 
     if (pipe(pipe_fds) < 0)
     {
@@ -80,7 +82,6 @@ int Process::start()
         (void)s;
         //handleChildPipes();
         dup2(pipe_fds[1], 1);
-        close(pipe_fds[0]);
         close(pipe_fds[1]);
 
         std::vector<const char*> arg_v = Utils::ContainerToConstChar(mProcessName, getCommandArguments());
@@ -93,6 +94,7 @@ int Process::start()
     {
         setIsAlive(true);
         // handleParentPipes();
+        waitpid(-1, &ret, WNOHANG);
         if (WIFEXITED(ret))
         {
             setIsAlive(false);
