@@ -1,6 +1,5 @@
 #include "Supervisor.hpp"
 #include "Process.hpp"
-#include "StringUtils.hpp"
 #include "Utils.hpp"
 #include <functional>
 #include <memory>
@@ -24,22 +23,6 @@ int Supervisor::isConfigValid()
     return mIsConfigValid;
 }
 
-int Supervisor::printHelp(std::shared_ptr<Process> & process)
-{
-    std::string out;
-    if (process)
-    {
-        std::cout << "cool process you got there";
-    }
-    out += "Taskmaster\n\t";
-    out += "available commands:\n";
-    out += "\t\thelp: Print this help\n";
-    out += "\t\tstart: start process by name\n";
-    out += "\t\tlist: list processes\n";
-    std::cout << out;
-    return 0;
-}
-
 void Supervisor::init()
 {
     for (auto& [key, p]: mProcessMap)
@@ -52,7 +35,9 @@ void Supervisor::init()
     }
     // init REPL
     mCommandMap["help"] = std::bind(&Supervisor::printHelp, this, std::placeholders::_1);
+    mCommandMap["reload"] = std::bind(&Supervisor::reloadConfig, this, std::placeholders::_1);
     mCommandMap["start"] = std::bind(&Supervisor::startProcess, this, std::placeholders::_1);
+    mCommandMap["exit"] = std::bind(&Supervisor::exit, this, std::placeholders::_1);
     // start REPL
     std::string line;
     std::cout << "taskmasterctl>$ ";
@@ -61,7 +46,7 @@ void Supervisor::init()
          std::cout << "taskmasterctl>$ ")
     {
         std::cout << line << std::endl;
-        auto split_command = SplitString(line, " ");
+        auto split_command = Utils::SplitString(line, " ");
         if (split_command.size() == 0)
         {
             continue ;
@@ -71,7 +56,11 @@ void Supervisor::init()
             if ((*it).first == split_command.front())
             {
                 std::cout << "call command\n";
-                mCommandMap[(*it).first](mProcessMap[split_command.back()]);
+                if (mProcessMap.find(split_command.back()) != mProcessMap.end() ||
+                    split_command.front() == "help" ||
+                    split_command.front() == "reload") {
+                    mCommandMap[(*it).first](mProcessMap[split_command.back()]);
+                }
             }
         }
     }
@@ -98,6 +87,54 @@ int Supervisor::startProcess(std::shared_ptr<Process> & process)
         }
     }
     return process_return_val != process->getExpectedReturn();
+}
+
+int Supervisor::printHelp(std::shared_ptr<Process> & process)
+{
+    std::string out;
+    if (process)
+    {
+        std::cout << "cool process you got there";
+    }
+    out += "Taskmaster\n\t";
+    out += "available commands:\n";
+    out += "\t\thelp: Print this help\n";
+    out += "\t\tstart: start process by name\n";
+    out += "\t\tlist: list processes\n";
+    std::cout << out;
+    return 0;
+}
+
+/*
+** reload process configuration, or, if no process is specified,
+**  reload full config
+ */
+int Supervisor::reloadConfig(std::shared_ptr<Process> & process)
+{
+    if (process)
+    {
+        // loadConfig("", process->getName());
+    }
+    return loadConfig(mConfigFilePath);
+}
+
+int Supervisor::exit(std::shared_ptr<Process>& process)
+{
+    (void)process;
+    int n = 0;
+    int original_size = mProcessMap.size();
+
+    for (auto & [key, process] : mProcessMap)
+    {
+        std::cout << "killing " << key << "\n";
+        if (process->isAlive())
+        {
+            process->stop();
+            n++;
+        }
+    }
+    std::cout << "killed: " << n << "processes, " << original_size - n << "were already stopped\n";
+    return 0;
 }
 
 int Supervisor::loadConfig(const string & config_path)

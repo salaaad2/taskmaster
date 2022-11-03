@@ -1,11 +1,12 @@
 #include "Process.hpp"
-#include "StringUtils.hpp"
 
 #include <cstdlib>
 #include <unistd.h>
 #include <vector>
 
 #include <sys/wait.h>
+
+#include "Utils.hpp"
 
 Process::Process() :
     mIsAlive(false),
@@ -54,7 +55,7 @@ Process::Process(
 
 Process::~Process() {}
 
-int Process::start() const
+int Process::start()
 {
     int pid;
     int pipe_fds[2];
@@ -86,9 +87,13 @@ int Process::start() const
            close(pipe_fds[0]);
            close(pipe_fds[1]);
        }
-       std::vector<const char*> arg_v = JoinStrings(mProcessName, getCommandArguments(), "" , "");
-       execv(mFullPath.c_str(),
-           const_cast<char*const*>(arg_v.data()));
+       std::vector<const char*> arg_v = Utils::JoinStrings(mProcessName, getCommandArguments());
+       int e_ret = execv(mFullPath.c_str(),
+           const_cast<char*const*>(arg_v.data()));\
+       if (e_ret == -1)
+       {
+           exit(1);
+       }
     }
     else
     {
@@ -112,9 +117,14 @@ int Process::start() const
     return ret;
 }
 
-int Process::attemptLaunch() const
+int Process::stop()
 {
-    return (0);
+    if (!isAlive())
+    {
+        return 0;
+    }
+
+    return 0;
 }
 
 std::ostream & operator<<(std::ostream & s, const Process & src)

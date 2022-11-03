@@ -1,7 +1,7 @@
 [
   {
     "arguments": [
-      "/usr/lib64/ccache/clang++",
+      "/Users/fmoenne-/.brew/opt/llvm@12/bin/clang++",
       "-c",
       "-std=c++17",
       "-Wall",
@@ -40,7 +40,7 @@
   },
   {
     "arguments": [
-      "/usr/lib64/ccache/clang++",
+      "/Users/fmoenne-/.brew/opt/llvm@12/bin/clang++",
       "-c",
       "-std=c++17",
       "-Wall",
@@ -59,7 +59,7 @@
   },
   {
     "arguments": [
-      "/usr/lib64/ccache/clang++",
+      "/Users/fmoenne-/.brew/opt/llvm@12/bin/clang++",
       "-c",
       "-std=c++17",
       "-Wall",

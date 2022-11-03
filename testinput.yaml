@@ -19,23 +19,13 @@ supervisor-processes:
     restart_on_error: true
     number_of_restarts: 1
     exec_on_startup: true
-  dog:
-    name: "cool"
-    full_path: "/bin/cat"
-    start_command: ["-e", "cool"]
+  build:
+    name: "make"
+    full_path: "/usr/bin/make"
+    start_command: ["-j5", "asan"]
     expected_return: 0
     has_standard_streams: true
     output_redirect_path: ""
     restart_on_error: true
-    number_of_restarts: 3
-    exec_on_startup: true
-  irc:
-    name: "ircserv"
-    full_path: "./ircserv"
-    start_command: ["6667", "asd"]
-    expected_return: 0
-    has_standard_streams: false
-    output_redirect_path: "./file"
-    restart_on_error: false
-    number_of_restarts: 0
-    exec_on_startup: true
+    number_of_restarts: 1
+    exec_on_startup: false

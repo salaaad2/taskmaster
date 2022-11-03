@@ -8,7 +8,7 @@
 # taskmaster c++ makefile
 # @version 1.0
 #
-default: all
+default: asan
 
 #==============================================================================#
 #--------------------------------- SHELL --------------------------------------#
@@ -28,19 +28,16 @@ OBJS_DIR		 = obj/
 SRCS_NAME		 = main
 SRCS_NAME		 += Process
 SRCS_NAME		 += Supervisor
-SRCS_NAME		 += StringUtils
 SRCS_NAME		 += Utils
 #------------------------------------------------------------------------------#
 INCS_NAME		 = main
-INCS_NAME		 += Process
 INCS_NAME		 += Supervisor
-INCS_NAME		 += StringUtils
+INCS_NAME		 += Supervisor
 INCS_NAME		 += Utils
 SRCS			 = $(addprefix ${SRCS_DIR}, $(addsuffix .cpp, ${SRCS_NAME}))
 #------------------------------------------------------------------------------#
 #------------------------------------------------------------------------------#
 INCS			 = $(addprefix ${SRCS_DIR}, $(addsuffix .hpp, ${INCS_NAME}))
-INCS			+= $(patsubst %.cpp,%.hpp,${SRCS})
 #------------------------------------------------------------------------------#
 OBJS			 = $(patsubst ${SRCS_DIR}%.cpp,${OBJS_DIR}%.o,${SRCS})
 #------------------------------------------------------------------------------#

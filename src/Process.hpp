@@ -31,8 +31,8 @@ public:
         /*
         ** business logic
         */
-        int start() const ;
-        int stop() const ;
+        int start() ;
+        int stop() ;
 
         /*
         ** get/setters
@@ -67,7 +67,6 @@ private:
         /*
         ** private functions
         */
-        int attemptLaunch() const ;
 
         /*
         ** class members
