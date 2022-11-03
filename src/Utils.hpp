@@ -20,7 +20,7 @@ namespace Utils {
     ** C functions which require char*const*
      */
     template <typename T>
-    std::vector<const char*> JoinStrings(
+    std::vector<const char*> ContainerToConstChar(
             const std::string & name,
             const T & source)
     {
@@ -32,6 +32,22 @@ namespace Utils {
             out.push_back((*it).c_str());
         }
         out.push_back(NULL);
+        return out;
+    }
+
+
+    template <typename T>
+    std::string JoinStrings(
+            const T & source,
+            const std::string & separator)
+    {
+        std::string out;
+
+        for (auto it = source.begin(); it != source.end(); ++it)
+        {
+            out.append(*it);
+            out.append(separator);
+        }
         return out;
     }
 };

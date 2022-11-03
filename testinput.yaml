@@ -14,18 +14,28 @@ supervisor-processes:
     full_path: "/bin/cat"
     start_command: ["-e", "testinput.yaml"]
     expected_return: 0
-    has_standard_streams: true
-    output_redirect_path: ""
+    has_standard_streams: false
+    output_redirect_path: "./file"
     restart_on_error: true
     number_of_restarts: 1
     exec_on_startup: true
   build:
     name: "make"
     full_path: "/usr/bin/make"
-    start_command: ["-j5", "asan"]
+    start_command: ["-j5", "default"]
     expected_return: 0
     has_standard_streams: true
     output_redirect_path: ""
+    restart_on_error: true
+    number_of_restarts: 1
+    exec_on_startup: false
+  test_detach:
+    name: "sleep"
+    full_path: "./qwe.sh"
+    start_command: []
+    expected_return: 0
+    has_standard_streams: false
+    output_redirect_path: "./file"
     restart_on_error: true
     number_of_restarts: 1
     exec_on_startup: false

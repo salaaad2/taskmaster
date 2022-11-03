@@ -82,7 +82,7 @@ int Supervisor::startProcess(std::shared_ptr<Process> & process)
         }
         else
         {
-            Utils::PrintSuccess(process->getProcessName(), "started successfully");
+            Utils::PrintSuccess(process->getProcessName(), "Started successfully.");
             break;
         }
     }
@@ -96,11 +96,11 @@ int Supervisor::printHelp(std::shared_ptr<Process> & process)
     {
         std::cout << "cool process you got there";
     }
-    out += "Taskmaster\n\t";
-    out += "available commands:\n";
-    out += "\t\thelp: Print this help\n";
-    out += "\t\tstart: start process by name\n";
-    out += "\t\tlist: list processes\n";
+    out += "=========Taskmaster========\n";
+    out += "----available commands:----\n";
+    out += "\thelp  : Print this help\n";
+    out += "\tstart : Start process by name\n";
+    out += "\tlist  : List processes\n";
     std::cout << out;
     return 0;
 }

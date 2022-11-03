@@ -87,31 +87,28 @@ int Process::start()
            close(pipe_fds[0]);
            close(pipe_fds[1]);
        }
-       std::vector<const char*> arg_v = Utils::JoinStrings(mProcessName, getCommandArguments());
-       int e_ret = execv(mFullPath.c_str(),
-           const_cast<char*const*>(arg_v.data()));\
-       if (e_ret == -1)
-       {
-           exit(1);
-       }
+       std::vector<const char*> arg_v = Utils::ContainerToConstChar(mProcessName, getCommandArguments());
+       int e_ret = execv(
+           mFullPath.c_str(),
+           const_cast<char*const*>(arg_v.data()));
+       (void)e_ret;
+        exit(1);
     }
     else
     {
+       setIsAlive(true);
        if (!getHasStandardStreams() && getOutputRedirectPath().size() != 0)
        {
            // handleParentPipes();
            close(pipe_fds[1]);
            int nbytes = read(pipe_fds[0], out, sizeof(out));
            printf("process_output:\n%.*s\n", nbytes, out);
-           return 0;
        }
-       else
-       {
-           waitpid(pid, &ret, 0);
-       }
+       waitpid(pid, &ret, 0);
        if (WIFEXITED(ret))
        {
           ret = WEXITSTATUS(ret);
+          setIsAlive(false);
        }
     }
     return ret;
@@ -123,17 +120,21 @@ int Process::stop()
     {
         return 0;
     }
-
     return 0;
 }
 
 std::ostream & operator<<(std::ostream & s, const Process & src)
 {
+    string out;
+    if (src.getCommandArguments().size() != 0)
+    {
+        out = Utils::JoinStrings(src.getCommandArguments(), ", ");
+    }
     s << "Process:{ name: " << src.getProcessName()
       << ", isAlive: " << src.isAlive()
       << ", full_path: " << src.getFullPath()
-      << ", start_command: " << src.getCommandArguments().front()
-      << " }\n";
+      << ", start_command: [" << out
+      << "] }\n";
     return s;
 }
 
