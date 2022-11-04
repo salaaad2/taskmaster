@@ -28,10 +28,10 @@ std::vector<std::string> SplitString(
         out.push_back(source.substr(last_separator_pos, source.find(separator)));
         source.erase(0, source.find(separator) + separator.length());
     }
-	if (source.size() != 0)
-	{
-		out.push_back(source);
-	}
+    if (source.size() != 0)
+    {
+        out.push_back(source);
+    }
     return out;
 }
 

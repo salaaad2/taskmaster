@@ -42,11 +42,13 @@ namespace Utils {
             const std::string & separator)
     {
         std::string out;
-
-        for (auto it = source.begin(); it != source.end(); ++it)
+        auto it = source.begin();
+        out.append(*it);
+        ++it;
+        for (; it != source.end(); ++it)
         {
-            out.append(*it);
             out.append(separator);
+            out.append(*it);
         }
         return out;
     }

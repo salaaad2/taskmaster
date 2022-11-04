@@ -1,8 +1,10 @@
-#include "Supervisor.hpp"
 #include "Process.hpp"
+#include "Supervisor.hpp"
 #include "Utils.hpp"
+
 #include <functional>
 #include <memory>
+#include <thread>
 #include <string>
 #include <yaml-cpp/yaml.h>
 
@@ -37,6 +39,7 @@ void Supervisor::init()
     mCommandMap["help"] = std::bind(&Supervisor::printHelp, this, std::placeholders::_1);
     mCommandMap["reload"] = std::bind(&Supervisor::reloadConfig, this, std::placeholders::_1);
     mCommandMap["start"] = std::bind(&Supervisor::startProcess, this, std::placeholders::_1);
+    mCommandMap["status"] = std::bind(&Supervisor::getProcessStatus, this, std::placeholders::_1);
     mCommandMap["exit"] = std::bind(&Supervisor::exit, this, std::placeholders::_1);
     // start REPL
     std::string line;
@@ -55,8 +58,8 @@ void Supervisor::init()
         {
             if ((*it).first == split_command.front())
             {
-                std::cout << "call command\n";
                 if (mProcessMap.find(split_command.back()) != mProcessMap.end() ||
+                    split_command.front() == "status" ||
                     split_command.front() == "help" ||
                     split_command.front() == "reload") {
                     mCommandMap[(*it).first](mProcessMap[split_command.back()]);
@@ -75,7 +78,8 @@ int Supervisor::startProcess(std::shared_ptr<Process> & process)
 
     for (auto i = 0; i < number_of_restarts; i++)
     {
-        process_return_val = process->start();
+        std::thread process_thread(&Process::start, process);
+        process_thread.detach();
         if (process_return_val != process->getExpectedReturn())
         {
             Utils::PrintError(process->getProcessName(), std::to_string(process->getExpectedReturn()));
@@ -87,6 +91,22 @@ int Supervisor::startProcess(std::shared_ptr<Process> & process)
         }
     }
     return process_return_val != process->getExpectedReturn();
+}
+
+int Supervisor::getProcessStatus(std::shared_ptr<Process> & process)
+{
+    if (process.get() != nullptr)
+    {
+        std::cout << *process.get() << "\n";
+    }
+    else
+    {
+        for (auto & [key, proc]: mProcessMap)
+        {
+            std::cout << *proc.get() << "\n";
+        }
+    }
+    return 0;
 }
 
 int Supervisor::printHelp(std::shared_ptr<Process> & process)

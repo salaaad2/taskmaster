@@ -60,7 +60,6 @@ int Process::start()
 {
     int pid;
     int pipe_fds[2];
-    signal(SIGCHLD, handle_sigchild);
 
     if (pipe(pipe_fds) < 0)
     {
@@ -78,10 +77,9 @@ int Process::start()
     int ret = 0;
     if (pid == 0)
     {
-        int s = setsid();
-        (void)s;
         //handleChildPipes();
         dup2(pipe_fds[1], 1);
+        close(pipe_fds[0]);
         close(pipe_fds[1]);
 
         std::vector<const char*> arg_v = Utils::ContainerToConstChar(mProcessName, getCommandArguments());
@@ -94,15 +92,12 @@ int Process::start()
     {
         setIsAlive(true);
         // handleParentPipes();
-        waitpid(-1, &ret, WNOHANG);
+        close(pipe_fds[1]);
+        waitpid(pid, &ret, 0);
         if (WIFEXITED(ret))
         {
             setIsAlive(false);
             ret = WEXITSTATUS(ret);
-        }
-        else
-        {
-            waitpid(pid, &ret, 0);
         }
     }
     return ret;

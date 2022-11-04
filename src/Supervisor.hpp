@@ -40,6 +40,7 @@ class Supervisor {
         ** functions called by REPL
         */
         int startProcess(std::shared_ptr<Process> & process);
+        int getProcessStatus(std::shared_ptr<Process> & process);
         int printHelp(std::shared_ptr<Process> & process);
         int reloadConfig(std::shared_ptr<Process> &process);
         int exit(std::shared_ptr<Process> &process);
