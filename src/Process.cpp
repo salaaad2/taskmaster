@@ -6,6 +6,7 @@
 #include <vector>
 
 #include <sys/wait.h>
+#include <fcntl.h>
 
 #include "Utils.hpp"
 
@@ -15,6 +16,7 @@ Process::Process() :
     mExecOnStartup(false),
     mHasStandardStreams(true),
     mExpectedReturn(0),
+    mReturnValue(-1),
     mNumberOfRestarts(0),
     mStartTime(0.00),
     mFullPath(""),
@@ -31,6 +33,7 @@ Process::Process(
         bool execOnStartup,
         bool hasStandardStreams,
         int expectedReturn,
+        int returnValue,
         int numberOfRestarts,
         long double startTime,
         const string &fullPath,
@@ -44,6 +47,7 @@ Process::Process(
     mExecOnStartup(execOnStartup),
     mHasStandardStreams(hasStandardStreams),
     mExpectedReturn(expectedReturn),
+    mReturnValue(returnValue),
     mNumberOfRestarts(numberOfRestarts),
     mStartTime(startTime),
     mFullPath(fullPath),
@@ -74,33 +78,40 @@ int Process::start()
         // return error(ERROR_FATAL, "Internal Error", "fork()")
     }
 
-    int ret = 0;
+    int return_value = 0;
     if (pid == 0)
     {
         //handleChildPipes();
-        dup2(pipe_fds[1], 1);
+        int fd = STDOUT_FILENO;
+        if (!getHasStandardStreams())
+        {
+            fd = open(getOutputRedirectPath().c_str(), O_CREAT | O_TRUNC | O_WRONLY, 0644);
+        }
+        else
+        {
+            fd = pipe_fds[1];
+        }
+        dup2(fd, STDOUT_FILENO);
         close(pipe_fds[0]);
         close(pipe_fds[1]);
 
-        std::vector<const char*> arg_v = Utils::ContainerToConstChar(mProcessName, getCommandArguments());
-        int e_ret = execv(
-            mFullPath.c_str(),
-            const_cast<char*const*>(arg_v.data()));
-        exit(e_ret); /*127*/
+        std::vector<const char*> arg_v =
+            Utils::ContainerToConstChar(mProcessName, getCommandArguments());
+        int exec_return =
+            execv(mFullPath.c_str(), const_cast<char*const*>(arg_v.data()));
+        setReturnValue(exec_return);
+        exit(exec_return); /*127*/
     }
     else
     {
         setIsAlive(true);
         // handleParentPipes();
         close(pipe_fds[1]);
-        waitpid(pid, &ret, 0);
-        if (WIFEXITED(ret))
-        {
-            setIsAlive(false);
-            ret = WEXITSTATUS(ret);
-        }
+        waitpid(pid, &return_value, 0);
+        setReturnValue(return_value);
+        setIsAlive(false);
     }
-    return ret;
+    return getReturnValue();
 }
 
 int Process::stop()
@@ -175,6 +186,16 @@ int Process::getExpectedReturn() const
 void Process::setExpectedReturn(int newExpectedReturn)
 {
     mExpectedReturn = newExpectedReturn;
+}
+
+int Process::getReturnValue() const
+{
+    return mReturnValue;
+}
+
+void Process::setReturnValue(int newReturnValue)
+{
+    mReturnValue = newReturnValue;
 }
 
 int Process::getNumberOfRestarts() const

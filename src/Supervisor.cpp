@@ -41,6 +41,8 @@ void Supervisor::init()
     mCommandMap["start"] = std::bind(&Supervisor::startProcess, this, std::placeholders::_1);
     mCommandMap["status"] = std::bind(&Supervisor::getProcessStatus, this, std::placeholders::_1);
     mCommandMap["exit"] = std::bind(&Supervisor::exit, this, std::placeholders::_1);
+    mCommandMap["history"] = std::bind(&Supervisor::history, this, std::placeholders::_1);
+
     // start REPL
     std::string line;
     std::cout << "taskmasterctl>$ ";
@@ -59,10 +61,14 @@ void Supervisor::init()
             if ((*it).first == split_command.front())
             {
                 if (mProcessMap.find(split_command.back()) != mProcessMap.end() ||
-                    split_command.front() == "status" ||
                     split_command.front() == "help" ||
-                    split_command.front() == "reload") {
+                    split_command.front() == "reload" ||
+                    split_command.front() == "status" ||
+                    split_command.front() == "list" ||
+                    split_command.front() == "history"
+) {
                     mCommandMap[(*it).first](mProcessMap[split_command.back()]);
+                    mCommandHistory.push_back(line);
                 }
             }
         }
@@ -80,17 +86,26 @@ int Supervisor::startProcess(std::shared_ptr<Process> & process)
     {
         std::thread process_thread(&Process::start, process);
         process_thread.detach();
-        if (process_return_val != process->getExpectedReturn())
-        {
-            Utils::PrintError(process->getProcessName(), std::to_string(process->getExpectedReturn()));
-        }
-        else
-        {
-            Utils::PrintSuccess(process->getProcessName(), "Started successfully.");
-            break;
-        }
+        // std::thread monitor_thread(&Supervisor::monitorProcess, this, std::ref(process));
+        // monitor_thread.detach();
+        std::this_thread::sleep_for(process->getStartupTime());
     }
     return process_return_val != process->getExpectedReturn();
+}
+
+int Supervisor::monitorProcess(std::shared_ptr<Process>& process)
+{
+    while (process->isAlive())
+        ;
+    if (process->getReturnValue() != process->getExpectedReturn())
+    {
+        Utils::PrintError(process->getProcessName(), std::to_string(process->getExpectedReturn()));
+    }
+    else
+    {
+        Utils::PrintSuccess(process->getProcessName(), "Started successfully.");
+    }
+    return 0;
 }
 
 int Supervisor::getProcessStatus(std::shared_ptr<Process> & process)
@@ -111,16 +126,17 @@ int Supervisor::getProcessStatus(std::shared_ptr<Process> & process)
 
 int Supervisor::printHelp(std::shared_ptr<Process> & process)
 {
+    IGNORE(process);
     std::string out;
-    if (process)
-    {
-        std::cout << "cool process you got there";
-    }
     out += "=========Taskmaster========\n";
     out += "----available commands:----\n";
-    out += "\thelp  : Print this help\n";
-    out += "\tstart : Start process by name\n";
-    out += "\tlist  : List processes\n";
+    out += "help          : Print this help\n";
+    out += "reload        : reload config file (" + mConfigFilePath + ")\n";
+    out += "start  <name> : Start process by name\n";
+    out += "status <name> : get status of program \n";
+    out += "list          : TODO: List processes\n";
+    out += "history       : command history\n";
+    out += "exit          : terminate all programs and exit\n";
     std::cout << out;
     return 0;
 }
@@ -140,7 +156,7 @@ int Supervisor::reloadConfig(std::shared_ptr<Process> & process)
 
 int Supervisor::exit(std::shared_ptr<Process>& process)
 {
-    (void)process;
+    IGNORE(process);
     int n = 0;
     int original_size = mProcessMap.size();
 
@@ -154,6 +170,19 @@ int Supervisor::exit(std::shared_ptr<Process>& process)
         }
     }
     std::cout << "killed: " << n << "processes, " << original_size - n << "were already stopped\n";
+    return 0;
+}
+
+int Supervisor::history(std::shared_ptr<Process>& process)
+{
+    IGNORE(process);
+    std::string out;
+
+    out += "==== taskmaster command history ====";
+    for (auto c : mCommandHistory)
+    {
+        out += c + "\n";
+    }
     return 0;
 }
 

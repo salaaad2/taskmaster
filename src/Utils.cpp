@@ -1,10 +1,16 @@
 #include "Utils.hpp"
+#include <string>
 
 namespace Utils {
 
 void PrintError(const string & source, const string & reason)
 {
     std::cout << "taskmaster: error: " << source << ": " << reason << std::endl;
+}
+
+void PrintStatus(const string & source, const string & action, int expected)
+{
+    std::cout << "taskmaster: status: " << source << action << "expected: " << std::to_string(expected) << "\n";
 }
 
 void PrintSuccess(const string & source, const string & reason)

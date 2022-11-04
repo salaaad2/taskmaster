@@ -3,10 +3,16 @@
 
 using std::string;
 
+#define IGNORE(x) (void)x;
+
 namespace Utils {
     void PrintError(
         const string & source,
         const string & reason);
+    void PrintStatus(
+        const string & source,
+        const string & action,
+        int expected);
     void PrintSuccess(
         const string & source,
         const string & reason);

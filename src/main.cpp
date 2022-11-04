@@ -1,10 +1,8 @@
 #include <iostream>
 #include "Supervisor.hpp"
 
-int main(int ac, char *av[])
+int main(void)
 {
-    (void)av;
-    (void)ac;
     std::cout << "taskmaster v0.0.1" << std::endl;
     /* TODO: get args */
     Supervisor s("./testinput.yaml");

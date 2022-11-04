@@ -18,6 +18,7 @@ public:
             bool execOnStartup,
             bool hasStandardStreams,
             int expectedReturn,
+            int returnValue,
             int numberOfRestarts,
             long double startTime,
             const string &fullPath,
@@ -45,6 +46,8 @@ public:
         void setExecOnStartup(bool newExecOnStartup);
         bool getHasStandardStreams() const;
         void setHasStandardStreams(bool newHasStandardStreams);
+        int getReturnValue() const;
+        void setReturnValue(int newReturnValue);
         int getExpectedReturn() const;
         void setExpectedReturn(int newExpectedReturn);
         int getNumberOfRestarts() const;
@@ -76,6 +79,7 @@ private:
         bool mExecOnStartup;
         bool mHasStandardStreams;
         int mExpectedReturn;
+        int mReturnValue;
         int mNumberOfRestarts;
         long double mStartTime;
         string mFullPath;
