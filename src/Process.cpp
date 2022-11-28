@@ -1,12 +1,13 @@
 #include "Process.hpp"
 
-#include <cstdlib>
 #include <sys/signal.h>
-#include <unistd.h>
 #include <vector>
 
+#include <cstdlib>
+#include <unistd.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#include <signal.h>
 
 #include "Utils.hpp"
 
@@ -18,6 +19,7 @@ Process::Process() :
     mExpectedReturn(0),
     mReturnValue(-1),
     mNumberOfRestarts(0),
+    mPid(0),
     mStartTime(0.00),
     mFullPath(""),
     mProcessName(""),
@@ -49,6 +51,7 @@ Process::Process(
     mExpectedReturn(expectedReturn),
     mReturnValue(returnValue),
     mNumberOfRestarts(numberOfRestarts),
+    mPid(0),
     mStartTime(startTime),
     mFullPath(fullPath),
     mProcessName(name),
@@ -95,11 +98,13 @@ int Process::start()
         close(pipe_fds[0]);
         close(pipe_fds[1]);
 
+        std::cout << "std::streams\n";
+        //std::cout << "execv() failed: " << exec_return << "\n";
         std::vector<const char*> arg_v =
             Utils::ContainerToConstChar(mProcessName, getCommandArguments());
         int exec_return =
             execv(mFullPath.c_str(), const_cast<char*const*>(arg_v.data()));
-        setReturnValue(exec_return);
+        // on execv success, this will never happen
         exit(exec_return); /*127*/
     }
     else
@@ -107,7 +112,9 @@ int Process::start()
         setIsAlive(true);
         // handleParentPipes();
         close(pipe_fds[1]);
+        std::cout << "waiting on pid: " << pid << "\n";
         waitpid(pid, &return_value, 0);
+        std::cout << "waitpid finished with code: " << return_value << "\n";
         setReturnValue(return_value);
         setIsAlive(false);
     }
@@ -116,9 +123,15 @@ int Process::start()
 
 int Process::stop()
 {
+    int ret = 0;
+
     if (!isAlive())
     {
         return 0;
+    }
+    else
+    {
+        ret = kill(mPid, SIGTERM);
     }
     return 0;
 }

@@ -31,11 +31,11 @@ supervisor-processes:
     exec_on_startup: false
   test_detach:
     name: "sleep"
-    full_path: "./qwe.sh"
+    full_path: "/Users/fmoenne-/Documents/42projects/taskmaster/qwe.sh"
     start_command: []
     expected_return: 0
-    has_standard_streams: false
-    output_redirect_path: "./file"
+    has_standard_streams: true
+    output_redirect_path: ""
     restart_on_error: true
     number_of_restarts: 1
     exec_on_startup: false

@@ -81,6 +81,7 @@ private:
         int mExpectedReturn;
         int mReturnValue;
         int mNumberOfRestarts;
+        int mPid;
         long double mStartTime;
         string mFullPath;
         string mProcessName;
