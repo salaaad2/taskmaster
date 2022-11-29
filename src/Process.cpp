@@ -20,7 +20,7 @@ Process::Process() :
     mReturnValue(-1),
     mNumberOfRestarts(0),
     mPid(0),
-    mStartTime(0.00),
+    mStartTime(1.00),
     mFullPath(""),
     mProcessName(""),
     mWorkingDir(""),
@@ -81,7 +81,6 @@ int Process::start()
         // return error(ERROR_FATAL, "Internal Error", "fork()")
     }
 
-    int return_value = 0;
     if (pid == 0)
     {
         //handleChildPipes();
@@ -98,8 +97,6 @@ int Process::start()
         close(pipe_fds[0]);
         close(pipe_fds[1]);
 
-        std::cout << "std::streams\n";
-        //std::cout << "execv() failed: " << exec_return << "\n";
         std::vector<const char*> arg_v =
             Utils::ContainerToConstChar(mProcessName, getCommandArguments());
         int exec_return =
@@ -110,13 +107,7 @@ int Process::start()
     else
     {
         setIsAlive(true);
-        // handleParentPipes();
         close(pipe_fds[1]);
-        std::cout << "waiting on pid: " << pid << "\n";
-        waitpid(pid, &return_value, 0);
-        std::cout << "waitpid finished with code: " << return_value << "\n";
-        setReturnValue(return_value);
-        setIsAlive(false);
     }
     return getReturnValue();
 }
@@ -220,6 +211,17 @@ void Process::setNumberOfRestarts(int newNumberOfRestarts)
 {
     mNumberOfRestarts = newNumberOfRestarts;
 }
+
+int Process::getPid() const
+{
+    return mPid;
+}
+
+void Process::setPid(int newPid)
+{
+    mPid = newPid;
+}
+
 
 long double Process::getStartTime() const
 {

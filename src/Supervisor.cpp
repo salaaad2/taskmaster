@@ -84,31 +84,37 @@ int Supervisor::startProcess(std::shared_ptr<Process> & process)
 
     for (auto i = 0; i < number_of_restarts; i++)
     {
-        process->start();
-        monitorProcess(process);
+        //monitorProcess(process);
         //std::thread process_thread(&Process::start, process);
-        //std::thread monitor_thread(&Supervisor::monitorProcess, this, std::ref(process));
         //process_thread.detach();
-        //monitor_thread.detach();
-        //std::this_thread::sleep_for(
-            //std::chrono::duration<double>(process->getStartTime()
-                                          //));
+        process->start();
+        std::thread monitor_thread(&Supervisor::monitorProcess, this, std::ref(process));
+        monitor_thread.detach();
     }
     return process_return_val != process->getExpectedReturn();
 }
 
 int Supervisor::monitorProcess(std::shared_ptr<Process>& process)
 {
-    while (process->isAlive())
-        std::cout << "waiting....";
+    int ret = 0;
+
+    if (!process->isAlive())
+    {
+        Utils::PrintError(process->getProcessName(), "ended prematurely");
+        process->setReturnValue(-123);
+    }
+    else
+    {
+        waitpid(process->getPid(), &ret, 0);
+        process->setReturnValue(ret);
+    }
     if (process->getReturnValue() != process->getExpectedReturn())
     {
-        std::cout << "Bad return value: " << process->getReturnValue() << "\n";
         Utils::PrintError(process->getProcessName(), std::to_string(process->getExpectedReturn()));
     }
     else
     {
-        Utils::PrintSuccess(process->getProcessName(), "Started successfully.");
+        Utils::PrintSuccess(process->getProcessName(), "Ended successfully.");
     }
     return 0;
 }

@@ -46,12 +46,14 @@ public:
         void setExecOnStartup(bool newExecOnStartup);
         bool getHasStandardStreams() const;
         void setHasStandardStreams(bool newHasStandardStreams);
-        int getReturnValue() const;
+        int  getReturnValue() const;
         void setReturnValue(int newReturnValue);
-        int getExpectedReturn() const;
+        int  getExpectedReturn() const;
         void setExpectedReturn(int newExpectedReturn);
-        int getNumberOfRestarts() const;
+        int  getNumberOfRestarts() const;
         void setNumberOfRestarts(int newNumberOfRestarts);
+        int  getPid() const;
+        void setPid(int newPid);
         long double getStartTime() const;
         void setStartTime(long double newStartTime);
         const string &getFullPath() const;
