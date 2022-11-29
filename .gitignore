@@ -13,5 +13,5 @@ ext/yaml-cpp/bazel*
 *.includes
 taskmaster
 ircserv
-file
+*file*
 qwe.sh

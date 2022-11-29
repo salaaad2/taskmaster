@@ -1,23 +1,43 @@
 #include "Utils.hpp"
+#include <mutex>
 #include <string>
+#include <fstream>
 
 namespace Utils {
 
-void PrintError(const string & source, const string & reason)
+void Log(
+    std::fstream & stream,
+    const string &type,
+    const string & source,
+    const string & reason)
 {
-    std::cout << "taskmaster: error: " << source << ": " << reason << std::endl;
+    string s = "[" + std::to_string(std::time(nullptr)) + "] taskmaster: " + type + ": " + source + ": " + reason + "\n";
+    stream.write(s.c_str(), s.length());
 }
 
-void PrintStatus(const string & source, const string & action, int expected)
+void LogSuccess(
+    std::fstream & stream,
+    const string & source,
+    const string & reason)
 {
-    std::cout << "taskmaster: status: " << source << action << "expected: " << std::to_string(expected) << "\n";
+    Log(stream, "SUCCESS", source, reason);
 }
 
-void PrintSuccess(const string & source, const string & reason)
+void LogError(
+    std::fstream & stream,
+    const string & source,
+    const string & reason)
 {
-    std::cout << "taskmaster: success: " << source << ": " << reason << std::endl;
+    Log(stream, "ERROR", source, reason);
 }
 
+
+void LogStatus(
+    std::fstream & stream,
+    const string & custom)
+{
+    stream.write(custom.c_str(), custom.length());
+}
 /*
 ** return string vector split using
 ** separator
@@ -39,6 +59,37 @@ std::vector<std::string> SplitString(
         out.push_back(source);
     }
     return out;
+}
+
+char * GetCommandLineOption(int ac, char *av[], const string &option_flag)
+{
+    for (int i = 0; i < ac; ++i)
+    {
+        if (std::string(av[i]) == option_flag)
+        {
+            return av[i + 1];
+        }
+    }
+    return NULL;
+}
+
+int PrintHelp()
+{
+    string out =
+        "Usage\n  taskmaster [options]\n\nOptions:\n";
+    out += "  --help\tprint this help\n";
+    out += "  --config-file <path>\tpath to the config file (YAML)\n";
+    out += "  --log-file <path>\tpath to the output log file\n";
+    std::cout << out;
+    return (0);
+}
+
+int MissingArgument(const string & argument)
+{
+    string out =
+        "Missing argument: " + argument + "\n";
+    std::cout << out;
+    return (1);
 }
 
 }

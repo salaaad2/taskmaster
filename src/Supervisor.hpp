@@ -2,6 +2,7 @@
 
 #include "Process.hpp"
 
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <vector>
@@ -19,7 +20,7 @@ class Supervisor {
         ** xtors
         */
         Supervisor();
-        Supervisor(const string config_path);
+        Supervisor(const string config_path, const string log_file_path);
         ~Supervisor();
 
         /*
@@ -52,8 +53,9 @@ class Supervisor {
         */
         bool mIsConfigValid;
         string mConfigFilePath;
-        const string mLogFilePath;
+        string mLogFilePath;
+        std::fstream mLogFile;
         std::vector<string> mCommandHistory;
-        std::map<string, std::shared_ptr<Process>> mProcessMap;
-        std::map<string, std::function<int(std::shared_ptr<Process>&)>> mCommandMap;
+        std::map<string, std::shared_ptr<Process> > mProcessMap;
+        std::map<string, std::function<int(std::shared_ptr<Process>&)> > mCommandMap;
 };

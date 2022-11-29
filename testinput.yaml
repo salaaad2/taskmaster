@@ -15,7 +15,7 @@ supervisor-processes:
     start_command: ["-e", "testinput.yaml"]
     expected_return: 0
     has_standard_streams: false
-    output_redirect_path: "./file"
+    output_redirect_path: "./cat_file"
     restart_on_error: true
     number_of_restarts: 1
     exec_on_startup: true
@@ -32,10 +32,10 @@ supervisor-processes:
   test_detach:
     name: "sleep"
     full_path: "/Users/fmoenne-/Documents/42projects/taskmaster/qwe.sh"
-    start_command: []
+    start_command: ["--test", "--help"]
     expected_return: 0
-    has_standard_streams: true
-    output_redirect_path: ""
+    has_standard_streams: false
+    output_redirect_path: "./sleep_file"
     restart_on_error: true
     number_of_restarts: 1
     exec_on_startup: false

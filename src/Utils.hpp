@@ -1,21 +1,27 @@
+#pragma once
+
 #include <iostream>
 #include <vector>
+#include <algorithm>
 
 using std::string;
 
 #define IGNORE(x) (void)x;
 
 namespace Utils {
-    void PrintError(
+
+    void LogError(
+        std::fstream & stream,
         const string & source,
         const string & reason);
-    void PrintStatus(
-        const string & source,
-        const string & action,
-        int expected);
-    void PrintSuccess(
+    void LogSuccess(
+        std::fstream & stream,
         const string & source,
         const string & reason);
+    void LogStatus(
+        std::fstream & stream,
+        const string & custom);
+
     std::vector<std::string> SplitString(
         std::string source,
         const std::string &separator);
@@ -58,4 +64,8 @@ namespace Utils {
         }
         return out;
     }
+
+    char * GetCommandLineOption(int ac, char *av[], const string &option_flag);
+    int PrintHelp();
+    int MissingArgument(const string & argument);
 };

@@ -10,15 +10,21 @@
 
 Supervisor::Supervisor() {}
 
-Supervisor::Supervisor(const string config_path)
-    : mIsConfigValid(false),
-      mConfigFilePath(config_path),
-      mLogFilePath("./")
+Supervisor::Supervisor(
+    const string config_path,
+    const string log_file_path) :
+      mIsConfigValid(false),
+      mConfigFilePath(config_path)
 {
     loadConfig(mConfigFilePath);
+    mLogFilePath = (log_file_path.empty()) ?
+        "./taskmaster.log" :
+        log_file_path;
+    mLogFile.open(mLogFilePath, std::fstream::out);
 }
 
-Supervisor::~Supervisor() {}
+Supervisor::~Supervisor()
+{}
 
 int Supervisor::isConfigValid()
 {
@@ -50,7 +56,7 @@ void Supervisor::init()
          std::getline(std::cin, line);
          std::cout << "taskmasterctl>$ ")
     {
-        std::cout << line << std::endl;
+        std::cout << line << "\n";
         auto split_command = Utils::SplitString(line, " ");
         if (split_command.size() == 0)
         {
@@ -65,8 +71,7 @@ void Supervisor::init()
                     split_command.front() == "reload" ||
                     split_command.front() == "status" ||
                     split_command.front() == "list" ||
-                    split_command.front() == "history"
-) {
+                    split_command.front() == "history") {
                     mCommandMap[(*it).first](mProcessMap[split_command.back()]);
                     mCommandHistory.push_back(line);
                 }
@@ -84,9 +89,6 @@ int Supervisor::startProcess(std::shared_ptr<Process> & process)
 
     for (auto i = 0; i < number_of_restarts; i++)
     {
-        //monitorProcess(process);
-        //std::thread process_thread(&Process::start, process);
-        //process_thread.detach();
         process->start();
         std::thread monitor_thread(&Supervisor::monitorProcess, this, std::ref(process));
         monitor_thread.detach();
@@ -100,21 +102,31 @@ int Supervisor::monitorProcess(std::shared_ptr<Process>& process)
 
     if (!process->isAlive())
     {
-        Utils::PrintError(process->getProcessName(), "ended prematurely");
+        Utils::LogError(
+            mLogFile,
+            process->getProcessName(),
+            "ended prematurely");
         process->setReturnValue(-123);
     }
     else
     {
         waitpid(process->getPid(), &ret, 0);
+        process->setIsAlive(false);
         process->setReturnValue(ret);
     }
     if (process->getReturnValue() != process->getExpectedReturn())
     {
-        Utils::PrintError(process->getProcessName(), std::to_string(process->getExpectedReturn()));
+        Utils::LogError(
+            mLogFile,
+            process->getProcessName(),
+            std::to_string(process->getExpectedReturn()));
     }
     else
     {
-        Utils::PrintSuccess(process->getProcessName(), "Ended successfully.");
+        Utils::LogSuccess(
+            mLogFile,
+            process->getProcessName(),
+            "Ended successfully.");
     }
     return 0;
 }
@@ -173,27 +185,25 @@ int Supervisor::exit(std::shared_ptr<Process>& process)
 
     for (auto & [key, process] : mProcessMap)
     {
-        std::cout << "killing " << key << "\n";
+        Utils::LogStatus(mLogFile, "killing " + key + "\n");
         if (process->isAlive())
         {
             process->stop();
             n++;
         }
     }
-    std::cout << "killed: " << n << "processes, " << original_size - n << "were already stopped\n";
+    Utils::LogStatus(mLogFile, "killed: " + std::to_string(n) + "processes, " + std::to_string(original_size - n) + "were already stopped\n");
     return 0;
 }
 
 int Supervisor::history(std::shared_ptr<Process>& process)
 {
     IGNORE(process);
-    std::string out;
+    std::string out =
+        "==== taskmaster command history ====\n";
 
-    out += "==== taskmaster command history ====";
-    for (auto c : mCommandHistory)
-    {
-        out += c + "\n";
-    }
+    out += Utils::JoinStrings(mCommandHistory, "\n");
+    std::cout << out;
     return 0;
 }
 
