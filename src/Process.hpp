@@ -45,8 +45,8 @@ public:
         void setRestartOnError(bool newRestartOnError);
         bool getExecOnStartup() const;
         void setExecOnStartup(bool newExecOnStartup);
-        bool getHasStandardStreams() const;
-        void setHasStandardStreams(bool newHasStandardStreams);
+        bool getRedirectStreams() const;
+        void setRedirectStreams(bool newHasStandardStreams);
         int  getReturnValue() const;
         void setReturnValue(int newReturnValue);
         int  getExpectedReturn() const;
@@ -82,7 +82,7 @@ private:
         bool mIsAlive;
         bool mRestartOnError;
         bool mExecOnStartup;
-        bool mHasStandardStreams;
+        bool mRedirectStreams;
         int mExpectedReturn;
         int mReturnValue;
         int mNumberOfRestarts;

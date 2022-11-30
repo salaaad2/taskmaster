@@ -272,7 +272,7 @@ int Supervisor::loadConfig(const string & config_path)
         }
         new_process->setFullPath(GetYAMLNode<string>(it, "full_path", &is_node_valid));
         if (!is_node_valid) {Utils::LogError(mLogFile, "full_path", "does not exist or is invalid"); continue;}
-        new_process->setHasStandardStreams(GetYAMLNode<bool>(it, "has_standard_streams", &is_node_valid));
+        new_process->setRedirectStreams(GetYAMLNode<bool>(it, "redirect_streams", &is_node_valid));
         new_process->setOutputRedirectPath(GetYAMLNode<string>(it, "output_redirect_path", &is_node_valid));
         new_process->setExpectedReturn(GetYAMLNode<int>(it, "expected_return", &is_node_valid));
         if (!is_node_valid) {Utils::LogError(mLogFile, "expected_return", "does not exist or is invalid"); continue;}

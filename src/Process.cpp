@@ -16,7 +16,7 @@ Process::Process() :
     mIsAlive(false),
     mRestartOnError(false),
     mExecOnStartup(false),
-    mHasStandardStreams(true),
+    mRedirectStreams(true),
     mExpectedReturn(0),
     mReturnValue(-1),
     mNumberOfRestarts(0),
@@ -50,7 +50,7 @@ Process::Process(
     mIsAlive(isAlive),
     mRestartOnError(restartOnError),
     mExecOnStartup(execOnStartup),
-    mHasStandardStreams(hasStandardStreams),
+    mRedirectStreams(hasStandardStreams),
     mExpectedReturn(expectedReturn),
     mReturnValue(returnValue),
     mNumberOfRestarts(numberOfRestarts),
@@ -86,7 +86,7 @@ int Process::start()
     if (pid == 0)
     {
         int fd = STDOUT_FILENO;
-        if (!getHasStandardStreams())
+        if (!getRedirectStreams())
         {
             fd = open(getOutputRedirectPath().c_str(), O_CREAT | O_TRUNC | O_WRONLY, 0644);
         }
@@ -177,14 +177,14 @@ void Process::setExecOnStartup(bool newExecOnStartup)
     mExecOnStartup = newExecOnStartup;
 }
 
-bool Process::getHasStandardStreams() const
+bool Process::getRedirectStreams() const
 {
-    return mHasStandardStreams;
+    return mRedirectStreams;
 }
 
-void Process::setHasStandardStreams(bool newHasStandardStreams)
+void Process::setRedirectStreams(bool newHasStandardStreams)
 {
-    mHasStandardStreams = newHasStandardStreams;
+    mRedirectStreams = newHasStandardStreams;
 }
 
 int Process::getExpectedReturn() const
