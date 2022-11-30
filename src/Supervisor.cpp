@@ -5,6 +5,7 @@
 #include <exception>
 #include <functional>
 #include <memory>
+#include <sys/signal.h>
 #include <thread>
 #include <string>
 #include <yaml-cpp/yaml.h>
@@ -31,6 +32,7 @@ int Supervisor::isConfigValid()
 
 void Supervisor::init()
 {
+    // start all processes that have exec_on_startup set to true
     for (auto& [key, p]: mProcessMap)
     {
         if (p->getExecOnStartup() == false)
@@ -39,6 +41,12 @@ void Supervisor::init()
         }
         startProcess(p);
     }
+
+    // add signal to reload config
+    Utils::sighup_handler = [&] {
+        reloadConfig(mProcessMap["sleep"]);
+    };
+    signal(SIGHUP, Utils::SignalLambdaWrapper);
     // init REPL
     mCommandMap["help"] = std::bind(&Supervisor::printHelp, this, std::placeholders::_1);
     mCommandMap["reload"] = std::bind(&Supervisor::reloadConfig, this, std::placeholders::_1);
@@ -193,10 +201,7 @@ int Supervisor::printHelp(std::shared_ptr<Process> & process)
  */
 int Supervisor::reloadConfig(std::shared_ptr<Process> & process)
 {
-    if (process)
-    {
-        //TODO: loadConfig("", process->getName());
-    }
+    IGNORE(process);
     return loadConfig(mConfigFilePath);
 }
 

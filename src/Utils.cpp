@@ -92,4 +92,9 @@ int MissingArgument(const string & argument)
     return (1);
 }
 
+void SignalLambdaWrapper(int signal)
+{
+    sighup_handler(signal);
+}
+
 }

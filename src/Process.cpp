@@ -1,13 +1,13 @@
 #include "Process.hpp"
 
 #include <iostream>
-#include <sys/signal.h>
 #include <vector>
 
 #include <cstdlib>
-#include <unistd.h>
-#include <sys/wait.h>
 #include <fcntl.h>
+#include <unistd.h>
+#include <sys/signal.h>
+#include <sys/wait.h>
 #include <signal.h>
 
 #include "Utils.hpp"
@@ -124,7 +124,7 @@ int Process::stop()
     }
     else
     {
-      std::cerr << "killing process PID: {" << mPid << "}\n";
+        std::cerr << "killing process PID: {" << mPid << "}\n";
         ret = kill(mPid, mKillSignal);
         setIsAlive(false);
         return (ret == 0) ? 0 : 1;

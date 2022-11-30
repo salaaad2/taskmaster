@@ -68,4 +68,11 @@ namespace Utils {
     char * GetCommandLineOption(int ac, char *av[], const string &option_flag);
     int PrintHelp();
     int MissingArgument(const string & argument);
+
+
+    /*
+    ** signal handler
+    */
+    void SignalLambdaWrapper(int signal);
+    std::function<void(int)> sighup_handler;
 };
