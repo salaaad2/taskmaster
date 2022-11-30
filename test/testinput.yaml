@@ -1,0 +1,51 @@
+supervisor-processes:
+  basic:
+    name: "ls"
+    full_path: "/bin/ls"
+    start_command: ["-l", "-a"]
+    expected_return: 0
+    has_standard_streams: true
+    output_redirect_path: ""
+    restart_on_error: true
+    number_of_restarts: 1
+    exec_on_startup: true
+  basic_output:
+    name: "cat"
+    full_path: "/bin/cat"
+    start_command: ["-e", "testinput.yaml"]
+    expected_return: 0
+    has_standard_streams: false
+    output_redirect_path: "./cat_file"
+    restart_on_error: true
+    number_of_restarts: 1
+    exec_on_startup: true
+  test_sleep_arguments:
+    name: "sleep"
+    full_path: "/Users/fmoenne-/Documents/42projects/taskmaster/test_sleep_and_args.sh"
+    start_command: ["--test", "--help"]
+    expected_return: 0
+    has_standard_streams: false
+    output_redirect_path: "./sleep_file"
+    restart_on_error: true
+    number_of_restarts: 1
+    exec_on_startup: false
+  test_sleep_arguments:
+    name: "sleep"
+    full_path: "/Users/fmoenne-/Documents/42projects/taskmaster/qwe.sh"
+    start_command: ["--test", "--help"]
+    expected_return: 0
+    has_standard_streams: false
+    output_redirect_path: "./sleep_file"
+    restart_on_error: true
+    number_of_restarts: 1
+    exec_on_startup: false
+  test_sleep_arguments:
+    name: "sleep"
+    full_path: "/Users/fmoenne-/Documents/42projects/taskmaster/qwe.sh"
+    start_command: ["--test", "--help"]
+    expected_return: 0
+    has_standard_streams: false
+    output_redirect_path: "./sleep_file"
+    restart_on_error: true
+    number_of_restarts: 1
+    exec_on_startup: false

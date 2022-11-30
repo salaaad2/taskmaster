@@ -1,5 +1,6 @@
 #include "Process.hpp"
 
+#include <iostream>
 #include <sys/signal.h>
 #include <vector>
 
@@ -20,6 +21,7 @@ Process::Process() :
     mReturnValue(-1),
     mNumberOfRestarts(0),
     mPid(0),
+    mKillSignal(SIGTERM),
     mStartTime(1.00),
     mFullPath(""),
     mProcessName(""),
@@ -37,6 +39,7 @@ Process::Process(
         int expectedReturn,
         int returnValue,
         int numberOfRestarts,
+        int killSignal,
         long double startTime,
         const string &fullPath,
         const string &name,
@@ -52,6 +55,7 @@ Process::Process(
     mReturnValue(returnValue),
     mNumberOfRestarts(numberOfRestarts),
     mPid(0),
+    mKillSignal(killSignal),
     mStartTime(startTime),
     mFullPath(fullPath),
     mProcessName(name),
@@ -70,20 +74,17 @@ int Process::start()
 
     if (pipe(pipe_fds) < 0)
     {
-        std::cerr << "error: pipe\n";
+        //Utils::LogError(std::cerr, "pipe", "");
         return 1;
-        // return error(ERROR_FATAL, "Internal Error", "fork()")
     }
     if ((pid = fork()) < 0)
     {
-        std::cerr << "error: fork\n";
+        //Utils::LogError(std::cerr, "fork", "");
         return 1;
-        // return error(ERROR_FATAL, "Internal Error", "fork()")
     }
 
     if (pid == 0)
     {
-        //handleChildPipes();
         int fd = STDOUT_FILENO;
         if (!getHasStandardStreams())
         {
@@ -118,13 +119,15 @@ int Process::stop()
 
     if (!isAlive())
     {
-        return 0;
+        return -1;
     }
     else
     {
-        ret = kill(mPid, SIGTERM);
+        ret = kill(mPid, mKillSignal);
+        setIsAlive(false);
+        return (ret == 0) ? 0 : 1;
     }
-    return 0;
+    return ret;
 }
 
 std::ostream & operator<<(std::ostream & s, const Process & src)

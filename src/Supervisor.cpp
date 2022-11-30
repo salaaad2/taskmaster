@@ -45,6 +45,7 @@ void Supervisor::init()
     mCommandMap["help"] = std::bind(&Supervisor::printHelp, this, std::placeholders::_1);
     mCommandMap["reload"] = std::bind(&Supervisor::reloadConfig, this, std::placeholders::_1);
     mCommandMap["start"] = std::bind(&Supervisor::startProcess, this, std::placeholders::_1);
+    mCommandMap["status"] = std::bind(&Supervisor::stopProcess, this, std::placeholders::_1);
     mCommandMap["status"] = std::bind(&Supervisor::getProcessStatus, this, std::placeholders::_1);
     mCommandMap["exit"] = std::bind(&Supervisor::exit, this, std::placeholders::_1);
     mCommandMap["history"] = std::bind(&Supervisor::history, this, std::placeholders::_1);
@@ -94,6 +95,26 @@ int Supervisor::startProcess(std::shared_ptr<Process> & process)
         monitor_thread.detach();
     }
     return process_return_val != process->getExpectedReturn();
+}
+
+int Supervisor::stopProcess(std::shared_ptr<Process> & process)
+{
+    int stop_return_val = 0;
+
+    stop_return_val = process->stop();
+    if (stop_return_val == -1)
+    {
+        Utils::LogError(mLogFile, process->getProcessName(), "is not running");
+    }
+    else if (stop_return_val == 1)
+    {
+        Utils::LogError(mLogFile, process->getProcessName(), "kill(SIGTERM) did not return as expected");
+    }
+    else
+    {
+        Utils::LogSuccess(mLogFile, process->getProcessName(), "Terminated");
+    }
+    return 0;
 }
 
 int Supervisor::monitorProcess(std::shared_ptr<Process>& process)
@@ -172,7 +193,7 @@ int Supervisor::reloadConfig(std::shared_ptr<Process> & process)
 {
     if (process)
     {
-        // loadConfig("", process->getName());
+        //TODO: loadConfig("", process->getName());
     }
     return loadConfig(mConfigFilePath);
 }
@@ -186,11 +207,7 @@ int Supervisor::exit(std::shared_ptr<Process>& process)
     for (auto & [key, process] : mProcessMap)
     {
         Utils::LogStatus(mLogFile, "killing " + key + "\n");
-        if (process->isAlive())
-        {
-            process->stop();
-            n++;
-        }
+        process->stop();
     }
     Utils::LogStatus(mLogFile, "killed: " + std::to_string(n) + "processes, " + std::to_string(original_size - n) + "were already stopped\n");
     return 0;
@@ -207,9 +224,25 @@ int Supervisor::history(std::shared_ptr<Process>& process)
     return 0;
 }
 
+/*
+** Get node by value, check it's existence and return a
+** default constructed value if not found, as well as setting is_node_valid to false
+ */
+template <typename T>
+T GetYAMLNode(const YAML::iterator &node, const string &node_name, bool *is_node_valid)
+{
+    if (node->second[node_name])
+    {
+        *is_node_valid = true;
+        return node->second[node_name].as<T>();
+    }
+    return T();
+}
+
 int Supervisor::loadConfig(const string & config_path)
 {
     YAML::Node config = YAML::LoadFile(config_path);
+    bool is_node_valid = false;
 
     auto processes_node = config["supervisor-processes"];
     if (!processes_node)
@@ -220,15 +253,17 @@ int Supervisor::loadConfig(const string & config_path)
     for (auto it = processes_node.begin(); it != processes_node.end(); ++it)
     {
         std::shared_ptr<Process> new_process = std::make_shared<Process>(Process());
-        new_process->setFullPath(it->second["full_path"].as<string>());
-        new_process->setProcessName(it->second["name"].as<string>());
-        new_process->setHasStandardStreams(it->second["has_standard_streams"].as<bool>());
-        new_process->setOutputRedirectPath(it->second["output_redirect_path"].as<string>());
-        new_process->setExpectedReturn(it->second["expected_return"].as<int>());
-        new_process->setExpectedReturn(it->second["expected_return"].as<int>());
-        new_process->setExecOnStartup(it->second["exec_on_startup"].as<bool>());
-        new_process->setNumberOfRestarts(it->second["number_of_restarts"].as<int>());
-        new_process->setRestartOnError(it->second["restart_on_error"].as<bool>());
+        new_process->setFullPath(GetYAMLNode<string>(it, "full_path", &is_node_valid));
+        if (!is_node_valid) {Utils::LogError(mLogFile, "full_path", "does not exist or is invalid"); continue;}
+        new_process->setProcessName(GetYAMLNode<string>(it, "name", &is_node_valid));
+        if (!is_node_valid) {Utils::LogError(mLogFile, "name", "does not exist or is invalid"); continue;}
+        new_process->setHasStandardStreams(GetYAMLNode<bool>(it, "has_standard_streams", &is_node_valid));
+        new_process->setOutputRedirectPath(GetYAMLNode<string>(it, "output_redirect_path", &is_node_valid));
+        new_process->setExpectedReturn(GetYAMLNode<int>(it, "expected_return", &is_node_valid));
+        if (!is_node_valid) {Utils::LogError(mLogFile, "expected_return", "does not exist or is invalid"); continue;}
+        new_process->setExecOnStartup(GetYAMLNode<bool>(it, "exec_on_startup", &is_node_valid));
+        new_process->setNumberOfRestarts(GetYAMLNode<int>(it, "number_of_restarts", &is_node_valid));
+        new_process->setRestartOnError(GetYAMLNode<bool>(it, "restart_on_error", &is_node_valid));
         auto start_command = it->second["start_command"];
         for (auto c : start_command)
         {

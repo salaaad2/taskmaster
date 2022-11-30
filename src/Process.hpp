@@ -20,6 +20,7 @@ public:
             int expectedReturn,
             int returnValue,
             int numberOfRestarts,
+            int killSignal,
             long double startTime,
             const string &fullPath,
             const string &processName,
@@ -54,6 +55,8 @@ public:
         void setNumberOfRestarts(int newNumberOfRestarts);
         int  getPid() const;
         void setPid(int newPid);
+        int  getKillSignal() const;
+        void setKillSignal(int killSignal);
         long double getStartTime() const;
         void setStartTime(long double newStartTime);
         const string &getFullPath() const;
@@ -84,6 +87,7 @@ private:
         int mReturnValue;
         int mNumberOfRestarts;
         int mPid;
+        int mKillSignal;
         long double mStartTime;
         string mFullPath;
         string mProcessName;
