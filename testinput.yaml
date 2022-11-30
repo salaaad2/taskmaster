@@ -31,7 +31,7 @@ supervisor-processes:
     exec_on_startup: false
   test_detach:
     name: "sleep"
-    full_path: "/Users/fmoenne-/Documents/42projects/taskmaster/qwe.sh"
+    full_path: "/Users/fmoenne-/Documents/42projects/taskmaster/test/test_sleep_and_args.sh"
     start_command: ["--test", "--help"]
     expected_return: 0
     has_standard_streams: false

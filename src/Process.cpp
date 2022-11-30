@@ -107,6 +107,7 @@ int Process::start()
     }
     else
     {
+        setPid(pid);
         setIsAlive(true);
         close(pipe_fds[1]);
     }
@@ -123,6 +124,7 @@ int Process::stop()
     }
     else
     {
+      std::cerr << "killing process PID: {" << mPid << "}\n";
         ret = kill(mPid, mKillSignal);
         setIsAlive(false);
         return (ret == 0) ? 0 : 1;

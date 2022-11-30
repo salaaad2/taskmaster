@@ -35,7 +35,6 @@ class Supervisor {
         */
         int loadConfig(const string & config_path);
         int killAllProcesses(bool restart);
-        int writeToLog();
 
         /*
         ** functions called by REPL

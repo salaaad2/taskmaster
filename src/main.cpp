@@ -26,6 +26,7 @@ int main(int ac, char **av)
     Supervisor s(config_file, log_file);
     if (!s.isConfigValid())
     {
+        std::cerr << "error: invalid file provided: " << config_file << "\n";
         return (1);
     }
     else
