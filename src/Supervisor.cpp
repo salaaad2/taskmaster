@@ -60,7 +60,10 @@ T GetYAMLNode(
 };
 
 
-Supervisor::Supervisor() {}
+Supervisor::Supervisor()
+{
+    std::cout << "If you see this, you are in grave trouble";
+}
 
 Supervisor::Supervisor(
     const string config_path,
@@ -350,7 +353,7 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
     for (auto it = processes_node.begin(); it != processes_node.end(); ++it)
     {
         std::shared_ptr<Process> new_process = std::make_shared<Process>(Process());
-        new_process->setProcessName(GetYAMLNode<string>(it, "name", "", &is_node_valid, &value_changed));
+        new_process->setProcessName(GetYAMLNode<string>(it, "name", &is_node_valid));
         if (!is_node_valid) {Utils::LogError(mLogFile, "name", "does not exist or is invalid"); continue;}
 
         auto old_process_it = mProcessMap.find(new_process->getProcessName());
@@ -360,6 +363,7 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
             continue;
         }
         auto old_process = old_process_it->second;
+
         new_process->setFullPath(GetYAMLNode<string>(it, "full_path", old_process->getFullPath(), &is_node_valid, &value_changed));
         if (!is_node_valid)
         {Utils::LogError(mLogFile, "full_path", "does not exist or is invalid"); continue;}
