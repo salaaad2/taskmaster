@@ -86,7 +86,7 @@ int Process::start()
     if (pid == 0)
     {
         int fd = STDOUT_FILENO;
-        if (!getRedirectStreams())
+        if (getRedirectStreams())
         {
             fd = open(getOutputRedirectPath().c_str(), O_CREAT | O_TRUNC | O_WRONLY, 0644);
         }
@@ -95,6 +95,7 @@ int Process::start()
             fd = pipe_fds[1];
         }
         dup2(fd, STDOUT_FILENO);
+        dup2(fd, STDERR_FILENO);
         close(pipe_fds[0]);
         close(pipe_fds[1]);
 

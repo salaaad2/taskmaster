@@ -74,5 +74,4 @@ namespace Utils {
     ** signal handler
     */
     void SignalLambdaWrapper(int signal);
-    std::function<void(int)> sighup_handler;
 };

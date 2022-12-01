@@ -8,7 +8,7 @@ supervisor-processes:
     name: "invalidargs"
     full_path: "/bin/cat"
     start_command: ["-G", "testinput.yaml"]
-    redirect_streams: false
+    redirect_streams: true
     output_redirect_path: "./cat_file"
     restart_on_error: true
     number_of_restarts: 10
@@ -16,7 +16,7 @@ supervisor-processes:
     name: "default"
     full_path: "/Users/fmoenne-/Documents/42projects/taskmaster/test_sleep_and_args.sh"
     start_command: ["--test", "--help"]
-    redirect_streams: false
+    redirect_streams: true
     output_redirect_path: "./sleep_file"
     restart_on_error: true
     number_of_restarts: 1
