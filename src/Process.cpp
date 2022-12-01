@@ -73,15 +73,9 @@ int Process::start()
     int pipe_fds[2];
 
     if (pipe(pipe_fds) < 0)
-    {
-        //Utils::LogError(std::cerr, "pipe", "");
-        return 1;
-    }
+    {return 1;}
     if ((pid = fork()) < 0)
-    {
-        //Utils::LogError(std::cerr, "fork", "");
-        return 1;
-    }
+    {return 1;}
 
     if (pid == 0)
     {
@@ -140,11 +134,12 @@ std::ostream & operator<<(std::ostream & s, const Process & src)
     {
         out = Utils::JoinStrings(src.getCommandArguments(), ", ");
     }
-    s << "Process:{ name: " << src.getProcessName()
-      << ", isAlive: " << src.isAlive()
-      << ", full_path: " << src.getFullPath()
-      << ", start_command: [" << out
-      << "] }\n";
+    s << "[" << src.getProcessName() << "]\n"
+      << "Alive: " << ((src.isAlive()) ? "true PID: " + std::to_string(src.getPid()) : "false")
+      << "\nfull_path: " << src.getFullPath()
+      << "\nstart_command: [" << out << "]"
+      << "\nlog_to_file: " << ((src.getRedirectStreams()) ? "[" + src.getOutputRedirectPath() + "]" : "false")
+      << "\n";
     return s;
 }
 

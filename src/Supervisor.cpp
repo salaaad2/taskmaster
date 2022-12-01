@@ -48,9 +48,13 @@ Supervisor::Supervisor(
         "./taskmaster.log" :
         log_file_path;
     mLogFile.open(mLogFilePath, std::fstream::out);
+    Utils::LogStatus(mLogFile, "Starting taskmaster...");
 }
 
-Supervisor::~Supervisor() {}
+Supervisor::~Supervisor()
+{
+    Utils::LogStatus(mLogFile, "Exiting taskmaster...");
+}
 
 int Supervisor::isConfigValid()
 {return mIsConfigValid;}
@@ -105,6 +109,7 @@ void Supervisor::init()
                     split_command.front() == "reload" ||
                     split_command.front() == "status" ||
                     split_command.front() == "list" ||
+                    split_command.front() == "exit" ||
                     split_command.front() == "history") {
                     mCommandMap[(*it).first](mProcessMap[split_command.back()]);
                     mCommandHistory.push_back(line);
@@ -238,14 +243,17 @@ int Supervisor::exit(std::shared_ptr<Process>& process)
 {
     IGNORE(process);
     int n = 0;
-    int original_size = mProcessMap.size();
 
     for (auto & [key, process] : mProcessMap)
     {
-        Utils::LogStatus(mLogFile, "killing " + key + "\n");
-        process->stop();
+        if (process.get() != nullptr && process->isAlive())
+        {
+            process->stop();
+            Utils::LogStatus(mLogFile, "killing " + key + "\n");
+            n++;
+        }
     }
-    Utils::LogStatus(mLogFile, "killed: " + std::to_string(n) + "processes, " + std::to_string(original_size - n) + "were already stopped\n");
+    Utils::LogStatus(mLogFile, "Killed: " + std::to_string(n) + "processe(s);");
     return 0;
 }
 
@@ -276,8 +284,6 @@ int Supervisor::listProcesses(std::shared_ptr<Process>& process)
     std::cout << out;
     return 0;
 }
-
-
 
 /*
 ** load configuration from the provided .yaml file;
