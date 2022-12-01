@@ -28,4 +28,4 @@ supervisor-processes:
     output_redirect_path: "./sleep_file"
     restart_on_error: true
     number_of_restarts: 1
-    exec_on_startup: false
+    exec_on_startup: true

@@ -22,7 +22,7 @@ Process::Process() :
     mNumberOfRestarts(0),
     mPid(0),
     mKillSignal(SIGTERM),
-    mStartTime(1.00),
+    mStartTime(0.00),
     mFullPath(""),
     mProcessName(""),
     mWorkingDir(""),
