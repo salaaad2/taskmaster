@@ -7,7 +7,7 @@
 #include <memory>
 #include <vector>
 #include <list>
-#include <map>
+#include <unordered_map>
 #include <functional>
 
 
@@ -57,6 +57,6 @@ class Supervisor {
         string mLogFilePath;
         std::fstream mLogFile;
         std::vector<string> mCommandHistory;
-        std::map<string, std::shared_ptr<Process> > mProcessMap;
-        std::map<string, std::function<int(std::shared_ptr<Process>&)> > mCommandMap;
+        std::unordered_map<string, std::shared_ptr<Process> > mProcessMap;
+        std::unordered_map<string, std::function<int(std::shared_ptr<Process>&)> > mCommandMap;
 };
