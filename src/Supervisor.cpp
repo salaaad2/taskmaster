@@ -362,7 +362,9 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
             Utils::LogError(mLogFile, new_process->getProcessName(), "already exists in process list.");
             continue;
         }
-        auto old_process = old_process_it->second;
+        auto old_process = (old_process_it == mProcessMap.end()) ?
+            new_process :
+            old_process_it->second;
 
         new_process->setFullPath(GetYAMLNode<string>(it, "full_path", old_process->getFullPath(), &is_node_valid, &value_changed));
         if (!is_node_valid)
