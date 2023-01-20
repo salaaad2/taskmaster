@@ -5,13 +5,18 @@
 
 namespace Utils {
 
+static std::mutex write_mutex;
+
 void Log(
     std::fstream & stream,
-    const string &type,
+    const string & type,
     const string & source,
     const string & reason)
 {
-    string s = "[" + std::to_string(std::time(nullptr)) + "] taskmaster: " + type + ": " + source + ": " + reason + "\n";
+    string s = "[" + std::to_string(std::time(nullptr)) + "] "+
+        "taskmaster: " + type +
+        ": " + source +
+        ": " + reason + "\n";
     stream.write(s.c_str(), s.length());
 }
 

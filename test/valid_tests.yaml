@@ -32,10 +32,20 @@ supervisor-processes:
   ft_irc:
     name: "ft_irc"
     full_path: "/Users/fmoenne-/Documents/42projects/ft_irc/ircserv"
-    start_command: ["6667", "pass"]
+    start_command: ["6668", "pass"]
     expected_return: 0
     redirect_streams: true
     output_redirect_path: "./ircserv.log"
     restart_on_error: true
     number_of_restarts: 1
     exec_on_startup: false
+  test_return_val:
+    name: "ret_val"
+    full_path: "/Users/fmoenne-/Documents/42projects/taskmaster/test/a.out"
+    start_command: []
+    expected_return: 12
+    redirect_streams: false
+    output_redirect_path: ""
+    restart_on_error: false
+    number_of_restarts: 0
+    exec_on_startup: true

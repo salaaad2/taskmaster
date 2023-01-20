@@ -25,6 +25,7 @@ void SignalLambdaWrapper(int signal)
 ** you can pass initial_value as a parameter to find out if the read value is different
  */
 template <typename T>
+[[nodiscard]]
 T GetYAMLNode(
     const YAML::iterator &node,
     const string &node_name,
@@ -50,6 +51,7 @@ T GetYAMLNode(
 ** discard modification arguments
  */
 template <typename T>
+[[nodiscard]]
 T GetYAMLNode(
     const YAML::iterator &node,
     const string &node_name,
@@ -83,6 +85,8 @@ Supervisor::Supervisor(
 
 Supervisor::~Supervisor()
 {
+    // make sure to stop all started programs if we exit the interpreter
+    this->exit(mProcessMap[""]);
     Utils::LogStatus(mLogFile, "Exiting taskmaster...");
 }
 
@@ -215,6 +219,7 @@ int Supervisor::monitorProcess(std::shared_ptr<Process>& process)
     }
     if (process->getReturnValue() != process->getExpectedReturn())
     {
+
         Utils::LogError(
             mLogFile,
             process->getProcessName(),
