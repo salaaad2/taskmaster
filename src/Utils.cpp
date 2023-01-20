@@ -13,11 +13,13 @@ void Log(
     const string & source,
     const string & reason)
 {
-    string s = "[" + std::to_string(std::time(nullptr)) + "] "+
+    string s;
+    s = "[" + std::to_string(std::time(nullptr)) + "] "+
         "taskmaster: " + type +
         ": " + source +
         ": " + reason + "\n";
-    stream.write(s.c_str(), s.length());
+    stream << s;
+    stream.flush();
 }
 
 void LogSuccess(
@@ -25,7 +27,9 @@ void LogSuccess(
     const string & source,
     const string & reason)
 {
+    write_mutex.lock();
     Log(stream, "SUCCESS", source, reason);
+    write_mutex.unlock();
 }
 
 void LogError(
@@ -33,7 +37,9 @@ void LogError(
     const string & source,
     const string & reason)
 {
+    write_mutex.lock();
     Log(stream, "ERROR", source, reason);
+    write_mutex.unlock();
 }
 
 
@@ -41,7 +47,10 @@ void LogStatus(
     std::fstream & stream,
     const string & custom)
 {
-    stream.write(custom.c_str(), custom.length());
+    write_mutex.lock();
+    stream << custom;
+    stream.flush();
+    write_mutex.unlock();
 }
 /*
 ** return string vector split using

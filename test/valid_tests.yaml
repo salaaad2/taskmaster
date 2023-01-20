@@ -15,7 +15,7 @@ supervisor-processes:
     start_command: ["-e", "Makefile"]
     expected_return: 0
     redirect_streams: true
-    output_redirect_path: "./cat_file"
+    output_redirect_path: "./test/cat_file"
     restart_on_error: true
     number_of_restarts: 1
     exec_on_startup: true
@@ -25,7 +25,7 @@ supervisor-processes:
     start_command: ["--test", "--help"]
     expected_return: 0
     redirect_streams: true
-    output_redirect_path: "./sleep_file"
+    output_redirect_path: "./test/sleep_file"
     restart_on_error: true
     number_of_restarts: 1
     exec_on_startup: true
@@ -48,4 +48,25 @@ supervisor-processes:
     output_redirect_path: ""
     restart_on_error: false
     number_of_restarts: 0
+    exec_on_startup: true
+  test_restart_wrong_ret_val:
+    name: "restart_wrong_ret_val"
+    full_path: "/Users/fmoenne-/Documents/42projects/taskmaster/test/a.out"
+    start_command: []
+    expected_return: 9
+    redirect_streams: false
+    output_redirect_path: ""
+    restart_on_error: true
+    number_of_restarts: 8
+    exec_on_startup: true
+  test_restart_time_elapsed:
+    name: "restart_time_elapsed"
+    full_path: "/Users/fmoenne-/Documents/42projects/taskmaster/test/sleep_for_five.sh"
+    start_time: 3.0
+    start_command: []
+    expected_return: 0
+    redirect_streams: false
+    output_redirect_path: ""
+    restart_on_error: true
+    number_of_restarts: 8
     exec_on_startup: true

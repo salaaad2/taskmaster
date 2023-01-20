@@ -10,6 +10,7 @@
 #include <thread>
 #include <string>
 #include <yaml-cpp/yaml.h>
+#include <editline/readline.h>
 
 // anonymous namespace
 namespace {
@@ -80,14 +81,14 @@ Supervisor::Supervisor(
         "./taskmaster.log" :
         log_file_path;
     mLogFile.open(mLogFilePath, std::fstream::out);
-    Utils::LogStatus(mLogFile, "Starting taskmaster...");
+    Utils::LogStatus(mLogFile, "Starting taskmaster...\n");
 }
 
 Supervisor::~Supervisor()
 {
     // make sure to stop all started programs if we exit the interpreter
     this->exit(mProcessMap[""]);
-    Utils::LogStatus(mLogFile, "Exiting taskmaster...");
+    Utils::LogStatus(mLogFile, "Exiting taskmaster...\n");
 }
 
 int Supervisor::isConfigValid()
@@ -155,7 +156,6 @@ void Supervisor::init()
 
 int Supervisor::startProcess(std::shared_ptr<Process> & process)
 {
-    int process_return_val = 0;
     int number_of_restarts = process->getRestartOnError() ?
         process->getNumberOfRestarts() :
         1;
@@ -163,10 +163,14 @@ int Supervisor::startProcess(std::shared_ptr<Process> & process)
     for (auto i = 0; i < number_of_restarts; i++)
     {
         process->start();
-        std::thread monitor_thread(&Supervisor::monitorProcess, this, std::ref(process));
-        monitor_thread.detach();
+        if (number_of_restarts == 1)
+        {
+            // we won't restart the program if it fails, so we don't care.
+            std::thread monitor_thread(&Supervisor::monitorProcess, this, std::ref(process));
+            monitor_thread.detach();
+        }
     }
-    return process_return_val != process->getExpectedReturn();
+    return 0;
 }
 
 int Supervisor::stopProcess(std::shared_ptr<Process> & process)
@@ -204,8 +208,7 @@ int Supervisor::monitorProcess(std::shared_ptr<Process>& process)
         Utils::LogError(
             mLogFile,
             process->getProcessName(),
-            "ended prematurely");
-        process->setReturnValue(-123);
+            "Ended prematurely");
     }
     else
     {
@@ -223,6 +226,7 @@ int Supervisor::monitorProcess(std::shared_ptr<Process>& process)
         Utils::LogError(
             mLogFile,
             process->getProcessName(),
+            std::to_string(process->getReturnValue()) +
             std::to_string(process->getExpectedReturn()));
     }
     else
@@ -294,7 +298,7 @@ int Supervisor::exit(std::shared_ptr<Process>& process)
             n++;
         }
     }
-    Utils::LogStatus(mLogFile, "Killed: " + std::to_string(n) + "processe(s);");
+    Utils::LogStatus(mLogFile, "Killed: " + std::to_string(n) + " processe(s);");
     ::exit(0);
     return 0;
 }
