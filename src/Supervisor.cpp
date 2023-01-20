@@ -35,11 +35,13 @@ T GetYAMLNode(
     if (node->second[node_name])
     {
         T new_value = node->second[node_name].as<T>();
+
         if (new_value != initial_value)
         {
             *value_changed = true;
         }
         *is_node_valid = true;
+        return new_value;
     }
     return T();
 }

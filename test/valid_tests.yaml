@@ -29,3 +29,13 @@ supervisor-processes:
     restart_on_error: true
     number_of_restarts: 1
     exec_on_startup: true
+  ft_irc:
+    name: "ft_irc"
+    full_path: "/Users/fmoenne-/Documents/42projects/ft_irc/ircserv"
+    start_command: ["6667", "pass"]
+    expected_return: 0
+    redirect_streams: true
+    output_redirect_path: "./ircserv.log"
+    restart_on_error: true
+    number_of_restarts: 1
+    exec_on_startup: false

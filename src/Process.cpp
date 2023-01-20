@@ -241,6 +241,7 @@ const string &Process::getFullPath() const
 
 void Process::setFullPath(const string &newFullPath)
 {
+    std::cout << *this << "]newFullPath: " << newFullPath << "\n";
     mFullPath = newFullPath;
 }
 
