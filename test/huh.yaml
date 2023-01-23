@@ -6,17 +6,6 @@ supervisor-processes:
     expected_return: 12
     redirect_streams: false
     output_redirect_path: ""
-    restart_on_error: false
-    number_of_restarts: 0
-    exec_on_startup: true
-  test_restart_time_elapsed:
-    name: "restart_time_elapsed"
-    full_path: "/Users/fmoenne-/Documents/42projects/taskmaster/test/sleep_for_five.sh"
-    start_time: 3.0
-    start_command: []
-    expected_return: 0
-    redirect_streams: false
-    output_redirect_path: ""
     restart_on_error: true
-    number_of_restarts: 8
+    number_of_restarts: 3
     exec_on_startup: true

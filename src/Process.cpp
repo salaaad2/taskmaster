@@ -1,7 +1,10 @@
 #include "Process.hpp"
 
+#include <cstring>
 #include <fstream>
 #include <iostream>
+#include <sys/errno.h>
+#include <sys/fcntl.h>
 #include <vector>
 
 #include <cstdlib>
@@ -72,12 +75,21 @@ int Process::start()
 {
     int pid;
     int pipe_fds[2];
+    int fork_pipes[2];
 
+    // pipe for stdout
     if (pipe(pipe_fds) < 0)
     {return 1;}
-    if ((pid = fork()) < 0)
+
+    // pipe for the `self-pipe trick`
+    if (pipe(fork_pipes) < 0)
+    {return 1;}
+    if (fcntl(fork_pipes[1], F_SETFD, fcntl(fork_pipes[1], F_GETFD) | FD_CLOEXEC) < 0)
     {return 1;}
 
+    // this is a bridge
+    if ((pid = fork()) < 0)
+    {return 1;}
     if (pid == 0)
     {
         int fd = STDOUT_FILENO;
@@ -94,17 +106,34 @@ int Process::start()
         close(pipe_fds[0]);
         close(pipe_fds[1]);
 
+        close(fork_pipes[0]);
         std::vector<const char*> arg_v =
             Utils::ContainerToConstChar(mProcessName, getCommandArguments());
         int exec_return =
             execv(mFullPath.c_str(), const_cast<char*const*>(arg_v.data()));
+        write(fork_pipes[1], &errno, sizeof(int));
         // execv error:
-        exit(exec_return);
+        _exit(exec_return);
     }
     else
     {
-        setPid(pid);
-        setIsAlive(true);
+        int count;
+        int err;
+        close(fork_pipes[1]);
+        while ((count = read(fork_pipes[0], &err, sizeof(errno))) == -1)
+        {if (errno != EAGAIN && errno != EINTR) break;}
+        if (count)
+        {
+            std::cout << "execvp: " << strerror(err) << "\n";
+            setPid(-1);
+            setIsAlive(false);
+        }
+        else
+        {
+            setPid(pid);
+            setIsAlive(true);
+        }
+        close(fork_pipes[0]);
         close(pipe_fds[1]);
     }
     return getReturnValue();

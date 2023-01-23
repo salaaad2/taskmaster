@@ -223,7 +223,7 @@ int Supervisor::monitorProcess(std::shared_ptr<Process>& process)
     }
     else if (WIFSIGNALED(ret))
     {
-        std::cout << "alksdhjalksj" << std::endl;
+        std::cout << WTERMSIG(ret) << "\n";
     }
     if (process->getReturnValue() != process->getExpectedReturn())
     {
