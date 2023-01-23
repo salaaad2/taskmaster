@@ -11,7 +11,7 @@
 #include <thread>
 #include <string>
 #include <yaml-cpp/yaml.h>
-#include <editline/readline.h>
+#include <ctime>
 
 // anonymous namespace
 namespace {
@@ -65,7 +65,6 @@ T GetYAMLNode(
 }
 };
 
-
 Supervisor::Supervisor()
 {
     std::cout << "If you see this, you are in grave trouble.";
@@ -92,6 +91,7 @@ Supervisor::~Supervisor()
     Utils::LogStatus(mLogFile, "Exiting taskmaster...\n");
 }
 
+[[nodiscard]]
 int Supervisor::isConfigValid()
 {return mIsConfigValid;}
 
@@ -160,6 +160,7 @@ int Supervisor::startProcess(std::shared_ptr<Process> & process)
     int number_of_restarts = process->getRestartOnError() ?
         process->getNumberOfRestarts() :
         1;
+    std::cout.precision(17);
 
     for (auto i = 0; i < number_of_restarts; ++i)
     {
@@ -171,12 +172,6 @@ int Supervisor::startProcess(std::shared_ptr<Process> & process)
                 process->getProcessName(),
                 "Ended unexpectedly.");
             continue;
-        }
-        if (process->getStartTime() != 0.0)
-        {
-            // if we specified a start time, make it milliseconds and pause the current thread
-            auto as_milli = (int)std::round(process->getStartTime() * 1000.0);
-            std::this_thread::sleep_for(std::chrono::milliseconds(as_milli));
         }
         // the process managed to start, monitor it in another thread
         //  and exit the loop
@@ -231,6 +226,7 @@ int Supervisor::monitorProcess(std::shared_ptr<Process>& process)
     // if ctime < tbe -> process                    ctime: 4: e+st:3.5: gud
     //                                              ctime: 2: e+st:3.5: bad
     std::cout << "max supposed time: " << (long double)(process->getExecTime() + process->getStartTime()) << "\n";
+    std::cout.flush();
     if (t < (process->getExecTime() + process->getStartTime()))
     {
         Utils::LogError(

@@ -1,7 +1,7 @@
 supervisor-processes:
   test_return_val:
     name: "no-file-or-dir"
-    full_path: "/Users/fmoenne-/Documents/42projects/taskmaster/test/a.out"
+    full_path: "./test/a.out"
     start_command: []
     expected_return: 12
     redirect_streams: false
@@ -11,7 +11,7 @@ supervisor-processes:
     exec_on_startup: true
   test_restart_time_elapsed:
     name: "restart_time_elapsed"
-    full_path: "/Users/fmoenne-/Documents/42projects/taskmaster/test/sleep_for_two.sh"
+    full_path: "./test/sleep_for_two.sh"
     start_time: 5.0
     start_command: []
     expected_return: 0
@@ -22,7 +22,7 @@ supervisor-processes:
     exec_on_startup: true
   test_restart_time_good:
     name: "restart_time_good"
-    full_path: "/Users/fmoenne-/Documents/42projects/taskmaster/test/sleep_for_two.sh"
+    full_path: "./test/sleep_for_two.sh"
     start_time: 1.5
     start_command: []
     expected_return: 0

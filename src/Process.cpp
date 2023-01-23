@@ -13,6 +13,7 @@
 #include <sys/signal.h>
 #include <sys/wait.h>
 #include <signal.h>
+#include <ctime>
 
 #include "Utils.hpp"
 
@@ -126,6 +127,7 @@ int Process::start()
 
         if (count)
         {
+            std::cout << "strerror: " << strerror(err);
             setPid(-1);
             setIsAlive(false);
         }
