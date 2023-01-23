@@ -59,6 +59,8 @@ public:
         void setKillSignal(int killSignal);
         long double getStartTime() const;
         void setStartTime(long double newStartTime);
+        long double getExecTime() const;
+        void setExecTime(long double newExecTime);
         const string &getFullPath() const;
         void setFullPath(const string &newFullPath);
         const string &getProcessName() const;
@@ -89,6 +91,7 @@ private:
         int mPid;
         int mKillSignal;
         long double mStartTime;
+        long double mExecTime;
         string mFullPath;
         string mProcessName;
         string mWorkingDir;

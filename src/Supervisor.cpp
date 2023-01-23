@@ -164,26 +164,26 @@ int Supervisor::startProcess(std::shared_ptr<Process> & process)
     for (auto i = 0; i < number_of_restarts; ++i)
     {
         process->start();
+        if (!process->isAlive())
+        {
+            Utils::LogError(
+                mLogFile,
+                process->getProcessName(),
+                "Ended unexpectedly.");
+            continue;
+        }
         if (process->getStartTime() != 0.0)
         {
             // if we specified a start time, make it milliseconds and pause the current thread
             auto as_milli = (int)std::round(process->getStartTime() * 1000.0);
             std::this_thread::sleep_for(std::chrono::milliseconds(as_milli));
         }
-
-        if (!process->isAlive())
-        {
-            Utils::LogError(
-                mLogFile,
-                process->getProcessName(),
-                "Ended prematurely.");
-            return 1;
-        }
+        // the process managed to start, monitor it in another thread
+        //  and exit the loop
+        std::thread monitor_thread(&Supervisor::monitorProcess, this, std::ref(process));
+        monitor_thread.detach();
+        return 0;
     }
-
-    // waitpid in another thread
-    std::thread monitor_thread(&Supervisor::monitorProcess, this, std::ref(process));
-    monitor_thread.detach();
     return 0;
 }
 
@@ -211,10 +211,6 @@ int Supervisor::monitorProcess(std::shared_ptr<Process>& process)
 {
     int ret = 0;
 
-    Utils::LogSuccess(
-        mLogFile,
-        process->getProcessName(),
-        "Started successfully.");
     waitpid(process->getPid(), &ret, 0);
     process->setIsAlive(false);
     if (WIFEXITED(ret))
@@ -223,14 +219,31 @@ int Supervisor::monitorProcess(std::shared_ptr<Process>& process)
     }
     else if (WIFSIGNALED(ret))
     {
-        std::cout << WTERMSIG(ret) << "\n";
+
+        Utils::LogStatus(
+            mLogFile,
+            "Process " + process->getProcessName() +
+            " killed by signal: " + std::to_string(WTERMSIG(ret)));
     }
-    if (process->getReturnValue() != process->getExpectedReturn())
+    long double t = std::time(nullptr);
+    std::cout << "monitor time: " << t << "\n";
+    // (exectime + getStartTime) = time before exit e:1 st:2.5
+    // if ctime < tbe -> process                    ctime: 4: e+st:3.5: gud
+    //                                              ctime: 2: e+st:3.5: bad
+    std::cout << "max supposed time: " << (long double)(process->getExecTime() + process->getStartTime()) << "\n";
+    if (t < (process->getExecTime() + process->getStartTime()))
     {
         Utils::LogError(
             mLogFile,
             process->getProcessName(),
-            "unexpected return value: " + std::to_string(process->getReturnValue()) +
+            "Returned too early.");
+    }
+    else if (process->getReturnValue() != process->getExpectedReturn())
+    {
+        Utils::LogError(
+            mLogFile,
+            process->getProcessName(),
+            "Unexpected return value: " + std::to_string(process->getReturnValue()) +
             " expected: " + std::to_string(process->getExpectedReturn()));
         return 1;
     }
@@ -239,7 +252,7 @@ int Supervisor::monitorProcess(std::shared_ptr<Process>& process)
         Utils::LogSuccess(
             mLogFile,
             process->getProcessName(),
-            "Ended successfully.");
+            "Terminated without errors.");
     }
     return 0;
 }

@@ -73,9 +73,10 @@ Process::~Process() {}
 
 int Process::start()
 {
-    int pid;
+    pid_t pid;
     int pipe_fds[2];
     int fork_pipes[2];
+    int count, err;
 
     // pipe for stdout
     if (pipe(pipe_fds) < 0)
@@ -111,25 +112,28 @@ int Process::start()
             Utils::ContainerToConstChar(mProcessName, getCommandArguments());
         int exec_return =
             execv(mFullPath.c_str(), const_cast<char*const*>(arg_v.data()));
+        // execv error: write errno to the pipe opened in the parent process
         write(fork_pipes[1], &errno, sizeof(int));
-        // execv error:
         _exit(exec_return);
     }
     else
     {
-        int count;
-        int err;
+        // read bytes from the pipe in the child process, which are sent only
+        //  if execve failed (eg: upon call to a non-existent file)
         close(fork_pipes[1]);
         while ((count = read(fork_pipes[0], &err, sizeof(errno))) == -1)
         {if (errno != EAGAIN && errno != EINTR) break;}
+
         if (count)
         {
-            std::cout << "execvp: " << strerror(err) << "\n";
             setPid(-1);
             setIsAlive(false);
         }
         else
         {
+            long double t = std::time(nullptr);
+            std::cout << "exec time: " << t << "\n";
+            setExecTime(t);
             setPid(pid);
             setIsAlive(true);
         }
@@ -262,6 +266,16 @@ long double Process::getStartTime() const
 void Process::setStartTime(long double newStartTime)
 {
     mStartTime = newStartTime;
+}
+
+long double Process::getExecTime() const
+{
+    return mExecTime;
+}
+
+void Process::setExecTime(long double newExecTime)
+{
+    mExecTime = newExecTime;
 }
 
 const string &Process::getFullPath() const

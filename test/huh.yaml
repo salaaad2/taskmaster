@@ -9,3 +9,25 @@ supervisor-processes:
     restart_on_error: true
     number_of_restarts: 3
     exec_on_startup: true
+  test_restart_time_elapsed:
+    name: "restart_time_elapsed"
+    full_path: "/Users/fmoenne-/Documents/42projects/taskmaster/test/sleep_for_two.sh"
+    start_time: 5.0
+    start_command: []
+    expected_return: 0
+    redirect_streams: false
+    output_redirect_path: ""
+    restart_on_error: true
+    number_of_restarts: 3
+    exec_on_startup: true
+  test_restart_time_good:
+    name: "restart_time_good"
+    full_path: "/Users/fmoenne-/Documents/42projects/taskmaster/test/sleep_for_two.sh"
+    start_time: 1.5
+    start_command: []
+    expected_return: 0
+    redirect_streams: false
+    output_redirect_path: ""
+    restart_on_error: true
+    number_of_restarts: 3
+    exec_on_startup: true
