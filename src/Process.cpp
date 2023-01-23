@@ -1,5 +1,6 @@
 #include "Process.hpp"
 
+#include <fstream>
 #include <iostream>
 #include <vector>
 
@@ -97,8 +98,8 @@ int Process::start()
             Utils::ContainerToConstChar(mProcessName, getCommandArguments());
         int exec_return =
             execv(mFullPath.c_str(), const_cast<char*const*>(arg_v.data()));
-        // on execv success, this will never happen
-        exit(exec_return); /*127*/
+        // execv error:
+        exit(exec_return);
     }
     else
     {

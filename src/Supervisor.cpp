@@ -7,6 +7,7 @@
 #include <functional>
 #include <memory>
 #include <sys/signal.h>
+#include <sys/wait.h>
 #include <thread>
 #include <string>
 #include <yaml-cpp/yaml.h>
@@ -67,7 +68,7 @@ T GetYAMLNode(
 
 Supervisor::Supervisor()
 {
-    std::cout << "If you see this, you are in grave trouble";
+    std::cout << "If you see this, you are in grave trouble.";
 }
 
 Supervisor::Supervisor(
@@ -113,14 +114,14 @@ void Supervisor::init()
     };
     signal(SIGHUP, SignalLambdaWrapper);
     // init REPL
-    mCommandMap["help"] = std::bind(&Supervisor::printHelp, this, std::placeholders::_1);
-    mCommandMap["reload"] = std::bind(&Supervisor::reloadConfig, this, std::placeholders::_1);
-    mCommandMap["start"] = std::bind(&Supervisor::startProcess, this, std::placeholders::_1);
-    mCommandMap["stop"] = std::bind(&Supervisor::stopProcess, this, std::placeholders::_1);
-    mCommandMap["status"] = std::bind(&Supervisor::getProcessStatus, this, std::placeholders::_1);
-    mCommandMap["exit"] = std::bind(&Supervisor::exit, this, std::placeholders::_1);
+    mCommandMap["help"]    = std::bind(&Supervisor::printHelp, this, std::placeholders::_1);
+    mCommandMap["reload"]  = std::bind(&Supervisor::reloadConfig, this, std::placeholders::_1);
+    mCommandMap["start"]   = std::bind(&Supervisor::startProcess, this, std::placeholders::_1);
+    mCommandMap["stop"]    = std::bind(&Supervisor::stopProcess, this, std::placeholders::_1);
+    mCommandMap["status"]  = std::bind(&Supervisor::getProcessStatus, this, std::placeholders::_1);
+    mCommandMap["exit"]    = std::bind(&Supervisor::exit, this, std::placeholders::_1);
     mCommandMap["history"] = std::bind(&Supervisor::history, this, std::placeholders::_1);
-    mCommandMap["list"] = std::bind(&Supervisor::listProcesses, this, std::placeholders::_1);
+    mCommandMap["list"]    = std::bind(&Supervisor::listProcesses, this, std::placeholders::_1);
 
     // start REPL
     std::string line;
@@ -160,16 +161,29 @@ int Supervisor::startProcess(std::shared_ptr<Process> & process)
         process->getNumberOfRestarts() :
         1;
 
-    for (auto i = 0; i < number_of_restarts; i++)
+    for (auto i = 0; i < number_of_restarts; ++i)
     {
         process->start();
-        if (number_of_restarts == 1)
+        if (process->getStartTime() != 0.0)
         {
-            // we won't restart the program if it fails, so we don't care.
-            std::thread monitor_thread(&Supervisor::monitorProcess, this, std::ref(process));
-            monitor_thread.detach();
+            // if we specified a start time, make it milliseconds and pause the current thread
+            auto as_milli = (int)std::round(process->getStartTime() * 1000.0);
+            std::this_thread::sleep_for(std::chrono::milliseconds(as_milli));
+        }
+
+        if (!process->isAlive())
+        {
+            Utils::LogError(
+                mLogFile,
+                process->getProcessName(),
+                "Ended prematurely.");
+            return 1;
         }
     }
+
+    // waitpid in another thread
+    std::thread monitor_thread(&Supervisor::monitorProcess, this, std::ref(process));
+    monitor_thread.detach();
     return 0;
 }
 
@@ -180,15 +194,15 @@ int Supervisor::stopProcess(std::shared_ptr<Process> & process)
     stop_return_val = process->stop();
     if (stop_return_val == -1)
     {
-        Utils::LogError(mLogFile, process->getProcessName(), "is not running");
+        Utils::LogError(mLogFile, process->getProcessName(), "is not running.");
     }
     else if (stop_return_val == 1)
     {
-        Utils::LogError(mLogFile, process->getProcessName(), "kill(SIGTERM) did not return as expected");
+        Utils::LogError(mLogFile, process->getProcessName(), "kill(SIGTERM) did not return as expected.");
     }
     else
     {
-        Utils::LogSuccess(mLogFile, process->getProcessName(), "Terminated");
+        Utils::LogSuccess(mLogFile, process->getProcessName(), "Terminated.");
     }
     return 0;
 }
@@ -197,37 +211,28 @@ int Supervisor::monitorProcess(std::shared_ptr<Process>& process)
 {
     int ret = 0;
 
-    if (process->getStartTime() != 0.0)
+    Utils::LogSuccess(
+        mLogFile,
+        process->getProcessName(),
+        "Started successfully.");
+    waitpid(process->getPid(), &ret, 0);
+    process->setIsAlive(false);
+    if (WIFEXITED(ret))
     {
-        // 2.5 -> 2500.0; truncate 0
-        auto as_milli = (int)std::round(process->getStartTime() * 1000.0);
-        std::this_thread::sleep_for(std::chrono::milliseconds(as_milli));
+        process->setReturnValue(WEXITSTATUS(ret));
     }
-    if (!process->isAlive())
+    else if (WIFSIGNALED(ret))
     {
-        Utils::LogError(
-            mLogFile,
-            process->getProcessName(),
-            "Ended prematurely");
-    }
-    else
-    {
-        Utils::LogSuccess(
-            mLogFile,
-            process->getProcessName(),
-            "Started successfully.");
-        waitpid(process->getPid(), &ret, 0);
-        process->setIsAlive(false);
-        process->setReturnValue(ret);
+        std::cout << "alksdhjalksj" << std::endl;
     }
     if (process->getReturnValue() != process->getExpectedReturn())
     {
-
         Utils::LogError(
             mLogFile,
             process->getProcessName(),
-            std::to_string(process->getReturnValue()) +
-            std::to_string(process->getExpectedReturn()));
+            "unexpected return value: " + std::to_string(process->getReturnValue()) +
+            " expected: " + std::to_string(process->getExpectedReturn()));
+        return 1;
     }
     else
     {
