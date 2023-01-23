@@ -21,11 +21,11 @@ void SignalLambdaWrapper(int signal)
     sighup_handler(signal);
 }
 
-/*
-** Get node by value, check it's existence and return a
-** default constructed value if not found, as well as setting is_node_valid to false
-** you can pass initial_value as a parameter to find out if the read value is different
- */
+//
+// Get node by value, check it's existence and return a
+// default constructed value if not found, as well as setting is_node_valid to false
+// you can pass initial_value as a parameter to find out if the read value is different
+//
 template <typename T>
 [[nodiscard]]
 T GetYAMLNode(
@@ -33,7 +33,8 @@ T GetYAMLNode(
     const string &node_name,
     const T& initial_value,
     bool *is_node_valid,
-    bool *value_changed)
+    bool *value_changed,
+    T default_value = T())
 {
     if (node->second[node_name])
     {
@@ -46,12 +47,12 @@ T GetYAMLNode(
         *is_node_valid = true;
         return new_value;
     }
-    return T();
+    return (default_value == T()) ? T() : default_value;
 }
 
-/*
-** discard modification arguments
- */
+//
+// discard modification arguments
+//
 template <typename T>
 [[nodiscard]]
 T GetYAMLNode(
@@ -67,7 +68,7 @@ T GetYAMLNode(
 
 Supervisor::Supervisor()
 {
-    std::cout << "If you see this, you are in grave trouble.";
+    std::cout << "If you see this, you are in grave danger.";
 }
 
 Supervisor::Supervisor(
@@ -205,6 +206,7 @@ int Supervisor::stopProcess(std::shared_ptr<Process> & process)
 int Supervisor::monitorProcess(std::shared_ptr<Process>& process)
 {
     int ret = 0;
+    bool has_error = false;
 
     waitpid(process->getPid(), &ret, 0);
     process->setIsAlive(false);
@@ -214,7 +216,6 @@ int Supervisor::monitorProcess(std::shared_ptr<Process>& process)
     }
     else if (WIFSIGNALED(ret))
     {
-
         Utils::LogStatus(
             mLogFile,
             "Process " + process->getProcessName() +
@@ -222,13 +223,13 @@ int Supervisor::monitorProcess(std::shared_ptr<Process>& process)
     }
     // if a start_time was set in config, we need to make sure that we did not return 
     //  too early by doing current ?> exec_time + start_time
-    long double t = std::time(nullptr);
-    if (t < (process->getExecTime() + process->getStartTime()))
+    if (std::time(nullptr) < (process->getExecTime() + process->getStartTime()))
     {
         Utils::LogError(
             mLogFile,
             process->getProcessName(),
             "Returned too early.");
+        has_error = true;
     }
     if (process->getReturnValue() != process->getExpectedReturn())
     {
@@ -237,9 +238,9 @@ int Supervisor::monitorProcess(std::shared_ptr<Process>& process)
             process->getProcessName(),
             "Unexpected return value: " + std::to_string(process->getReturnValue()) +
             " expected: " + std::to_string(process->getExpectedReturn()));
-        return 1;
+        has_error = true;
     }
-    else
+    if (!has_error)
     {
         Utils::LogSuccess(
             mLogFile,
@@ -284,10 +285,10 @@ int Supervisor::printHelp(std::shared_ptr<Process> & process)
     return 0;
 }
 
-/*
-** reload process configuration, or, if no process is specified,
-**  reload full config
- */
+//
+// reload process configuration, or, if no process is specified,
+//  reload full config
+//
 int Supervisor::reloadConfig(std::shared_ptr<Process> & process)
 {
     IGNORE(process);
@@ -341,15 +342,15 @@ int Supervisor::listProcesses(std::shared_ptr<Process>& process)
     return 0;
 }
 
-/*
-** load configuration from the provided .yaml file;
-** some options are mandatoru and their absence will raise an error
-**
-** upon reload, override_existing is set to true; for processes whose parameters were changed,
-** only a few of them will cause the program to restart them.
-** these are:
-** ['', '']
- */
+//
+// load configuration from the provided .yaml file;
+// some options are mandatoru and their absence will raise an error
+//
+// upon reload, override_existing is set to true; for processes whose parameters were changed,
+// only a few of them will cause the program to restart them.
+// these are:
+// ['', '']
+//
 int Supervisor::loadConfig(const string & config_path, bool override_existing)
 {
     YAML::Node config;
@@ -388,6 +389,8 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
             old_process_it->second;
 
         new_process->setFullPath(GetYAMLNode<string>(it, "full_path", old_process->getFullPath(), &is_node_valid, &value_changed));
+        new_process->setWorkingDir(GetYAMLNode<string>(it, "start_directory", old_process->getWorkingDir(), &is_node_valid, &value_changed));
+
         if (!is_node_valid)
         {Utils::LogError(mLogFile, "full_path", "does not exist or is invalid"); continue;}
         else if (override_existing && value_changed)
@@ -410,6 +413,7 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
         new_process->setOutputRedirectPath(GetYAMLNode<string>(it, "output_redirect_path", &is_node_valid));
         new_process->setExecOnStartup(GetYAMLNode<bool>(it, "exec_on_startup", &is_node_valid));
         new_process->setRestartOnError(GetYAMLNode<bool>(it, "restart_on_error", &is_node_valid));
+        new_process->setKillSignal(GetYAMLNode<int>(it, "kill_signal", 0, &is_node_valid, &value_changed, SIGTERM));
 
         auto start_command = it->second["start_command"];
         for (auto c : start_command)

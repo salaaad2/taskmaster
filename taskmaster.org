@@ -8,8 +8,6 @@ use GetYAMLValues( is_modified )
 ** killsig
 sanity check
 ** nrestart
---->nrestart starts n processes sequentially instead of waiting for the previous one to fail
-what does process_return_val do ? nothing
 ** start umask
 single function call ?
 ** start path

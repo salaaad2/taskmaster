@@ -94,6 +94,7 @@ int Process::start()
     {return 1;}
     if (pid == 0)
     {
+        // output redirection
         int fd = STDOUT_FILENO;
         if (getRedirectStreams())
         {
@@ -109,6 +110,16 @@ int Process::start()
         close(pipe_fds[1]);
 
         close(fork_pipes[0]);
+
+        if (getWorkingDir() != "")
+        {
+            if (chdir(getWorkingDir().c_str()) < 0)
+            {
+                write(fork_pipes[1], &errno, sizeof(int));
+                _exit(1);
+            }
+        }
+
         std::vector<const char*> arg_v =
             Utils::ContainerToConstChar(mProcessName, getCommandArguments());
         int exec_return =
@@ -127,15 +138,13 @@ int Process::start()
 
         if (count)
         {
-            std::cout << "strerror: " << strerror(err);
+            // setStrError(strerror(err));
             setPid(-1);
             setIsAlive(false);
         }
         else
         {
-            long double t = std::time(nullptr);
-            std::cout << "exec time: " << t << "\n";
-            setExecTime(t);
+            setExecTime(std::time(nullptr));
             setPid(pid);
             setIsAlive(true);
         }
