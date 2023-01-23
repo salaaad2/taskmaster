@@ -220,13 +220,9 @@ int Supervisor::monitorProcess(std::shared_ptr<Process>& process)
             "Process " + process->getProcessName() +
             " killed by signal: " + std::to_string(WTERMSIG(ret)));
     }
+    // if a start_time was set in config, we need to make sure that we did not return 
+    //  too early by doing current ?> exec_time + start_time
     long double t = std::time(nullptr);
-    std::cout << "monitor time: " << t << "\n";
-    // (exectime + getStartTime) = time before exit e:1 st:2.5
-    // if ctime < tbe -> process                    ctime: 4: e+st:3.5: gud
-    //                                              ctime: 2: e+st:3.5: bad
-    std::cout << "max supposed time: " << (long double)(process->getExecTime() + process->getStartTime()) << "\n";
-    std::cout.flush();
     if (t < (process->getExecTime() + process->getStartTime()))
     {
         Utils::LogError(
@@ -234,7 +230,7 @@ int Supervisor::monitorProcess(std::shared_ptr<Process>& process)
             process->getProcessName(),
             "Returned too early.");
     }
-    else if (process->getReturnValue() != process->getExpectedReturn())
+    if (process->getReturnValue() != process->getExpectedReturn())
     {
         Utils::LogError(
             mLogFile,
@@ -312,7 +308,7 @@ int Supervisor::exit(std::shared_ptr<Process>& process)
             n++;
         }
     }
-    Utils::LogStatus(mLogFile, "Killed: " + std::to_string(n) + " processe(s);");
+    Utils::LogStatus(mLogFile, "Killed: " + std::to_string(n) + " processe(s);\n");
     ::exit(0);
     return 0;
 }
