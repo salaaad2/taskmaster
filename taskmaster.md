@@ -10,8 +10,6 @@ sanity check:
 - process not killed behaviour
 ## start umask
 single function call ?->umask()
-## start path
-single function call ?-> chdir()
 ## additional/different env values
 single function call ? execv() -> execve() + add new values to envp arg
 
@@ -31,4 +29,4 @@ single function call ? execv() -> execve() + add new values to envp arg
 ### DONE: Stop the main program
 ### DONE: See the status of all the programs described in the config file ("status" command)
 ### DONE: nrestart
-### A working directory to set before launching the program
+### DONE: start path

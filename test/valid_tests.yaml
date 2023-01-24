@@ -39,8 +39,33 @@ supervisor-processes:
     start_command: ["-l", "-a"]
     expected_return: 0
     redirect_streams: true
-    output_redirect_path: "./test/ls_chdir_output"
+    output_redirect_path: "./test/ls_chdir_output_file"
     restart_on_error: true
     number_of_restarts: 1
     exec_on_startup: true
+    working_directory: "../"
+  # invalid chdir
+  basic:
+    name: "ls-invalid-chdir"
+    full_path: "/bin/ls"
+    start_command: ["-l", "-a"]
+    expected_return: 0
+    redirect_streams: true
+    output_redirect_path: "./test/ls_invalid_chdir_file"
+    restart_on_error: true
+    number_of_restarts: 1
+    exec_on_startup: true
+    working_directory: "/qwe/test"
+  # umask: set 0 rights, perform ls
+  basic:
+    name: "ls-umask-norights"
+    full_path: "/bin/ls"
+    start_command: ["-l", "-a"]
+    expected_return: 0
+    redirect_streams: true
+    output_redirect_path: "./test/ls_invalid_umask_file"
+    restart_on_error: true
+    number_of_restarts: 1
+    exec_on_startup: true
+    umask: 0001
     working_directory: "../"

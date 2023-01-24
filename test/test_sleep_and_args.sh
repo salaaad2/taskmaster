@@ -1,2 +1,2 @@
 #!/bin/bash
-echo "sleep $1" ; sleep 6 ; echo "awake $2"
+echo "sleep $1" ; sleep 3 ; echo "awake $2"

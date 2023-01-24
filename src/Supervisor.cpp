@@ -405,6 +405,10 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
         new_process->setExecOnStartup(GetYAMLNode<bool>(it, "exec_on_startup", &is_node_valid));
         new_process->setRestartOnError(GetYAMLNode<bool>(it, "restart_on_error", &is_node_valid));
         new_process->setKillSignal(GetYAMLNode<int>(it, "kill_signal", 0, &is_node_valid, &value_changed, SIGTERM));
+        is_node_valid = false;
+        auto umask = GetYAMLNode<int>(it, "umask", 0, &is_node_valid, &value_changed);
+        if (is_node_valid)
+        {new_process->setUmask(umask);}
 
         auto start_command = it->second["start_command"];
         for (auto c : start_command)

@@ -11,6 +11,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/signal.h>
+#include <sys/stat.h>
 #include <sys/wait.h>
 #include <signal.h>
 #include <ctime>
@@ -27,7 +28,9 @@ Process::Process() :
     mNumberOfRestarts(0),
     mPid(0),
     mKillSignal(SIGTERM),
+    mUmask(-1),
     mStartTime(0.00),
+    mExecTime(0.00),
     mFullPath(""),
     mProcessName(""),
     mWorkingDir(""),
@@ -45,7 +48,6 @@ Process::Process(
         int returnValue,
         int numberOfRestarts,
         int killSignal,
-        long double startTime,
         const string &fullPath,
         const string &name,
         const string &workingDir,
@@ -61,7 +63,9 @@ Process::Process(
     mNumberOfRestarts(numberOfRestarts),
     mPid(0),
     mKillSignal(killSignal),
-    mStartTime(startTime),
+    mUmask(-1),
+    mStartTime(0.0),
+    mExecTime(0.0),
     mFullPath(fullPath),
     mProcessName(name),
     mWorkingDir(workingDir),
@@ -94,11 +98,29 @@ int Process::start()
     {return 1;}
     if (pid == 0)
     {
+        mode_t mask = 0644;
+        if (getUmask() != -1)
+        {
+            std::cout.flush();
+            mask = getUmask();
+            std::cout << "change mask: " << mask << "\n";
+            umask(mask);
+        }
+        else
+        {
+            std::cout << "default: " << mask << "\n";
+            umask(mask);
+        }
         // output redirection
         int fd = STDOUT_FILENO;
         if (getRedirectStreams())
         {
-            fd = open(getOutputRedirectPath().c_str(), O_CREAT | O_TRUNC | O_WRONLY, 0644);
+            fd = open(getOutputRedirectPath().c_str(), O_CREAT | O_TRUNC | O_WRONLY, mask);
+            if (fd == -1)
+            {
+                write(fork_pipes[1], &errno, sizeof(int));
+                _exit(1);
+            }
         }
         else
         {
@@ -164,7 +186,6 @@ int Process::stop()
     }
     else
     {
-        std::cerr << "killing process PID: {" << mPid << "}\n";
         ret = kill(mPid, mKillSignal);
         setIsAlive(false);
         return (ret == 0) ? 0 : 1;
@@ -270,12 +291,22 @@ void Process::setPid(int newPid)
 
 int Process::getKillSignal() const
 {
-    return mPid;
+    return mKillSignal;
 }
 
 void Process::setKillSignal(int newKillSignal)
 {
     mKillSignal = newKillSignal;
+}
+
+int Process::getUmask() const
+{
+    return mUmask;
+}
+
+void Process::setUmask(int newUmask)
+{
+    mUmask = newUmask;
 }
 
 long double Process::getStartTime() const

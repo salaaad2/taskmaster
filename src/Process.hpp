@@ -21,7 +21,6 @@ public:
             int returnValue,
             int numberOfRestarts,
             int killSignal,
-            long double startTime,
             const string &fullPath,
             const string &processName,
             const string &workingDir,
@@ -57,6 +56,8 @@ public:
         void setPid(int newPid);
         int  getKillSignal() const;
         void setKillSignal(int killSignal);
+        int  getUmask() const;
+        void setUmask(int umask);
         long double getStartTime() const;
         void setStartTime(long double newStartTime);
         long double getExecTime() const;
@@ -90,6 +91,7 @@ private:
         int mNumberOfRestarts;
         int mPid;
         int mKillSignal;
+        int mUmask;
         long double mStartTime;
         long double mExecTime;
         string mFullPath;
