@@ -268,6 +268,15 @@ void Process::setPid(int newPid)
     mPid = newPid;
 }
 
+int Process::getKillSignal() const
+{
+    return mPid;
+}
+
+void Process::setKillSignal(int newKillSignal)
+{
+    mKillSignal = newKillSignal;
+}
 
 long double Process::getStartTime() const
 {

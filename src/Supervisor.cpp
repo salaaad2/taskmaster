@@ -298,17 +298,8 @@ int Supervisor::reloadConfig(std::shared_ptr<Process> & process)
 int Supervisor::exit(std::shared_ptr<Process>& process)
 {
     IGNORE(process);
-    int n = 0;
 
-    for (auto & [key, process] : mProcessMap)
-    {
-        if (process.get() != nullptr && process->isAlive())
-        {
-            process->stop();
-            Utils::LogStatus(mLogFile, "killing " + key + "\n");
-            n++;
-        }
-    }
+    int n = killAllProcesses(false);
     Utils::LogStatus(mLogFile, "Killed: " + std::to_string(n) + " processe(s);\n");
     ::exit(0);
     return 0;
@@ -389,7 +380,7 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
             old_process_it->second;
 
         new_process->setFullPath(GetYAMLNode<string>(it, "full_path", old_process->getFullPath(), &is_node_valid, &value_changed));
-        new_process->setWorkingDir(GetYAMLNode<string>(it, "start_directory", old_process->getWorkingDir(), &is_node_valid, &value_changed));
+        new_process->setWorkingDir(GetYAMLNode<string>(it, "working_directory", old_process->getWorkingDir(), &is_node_valid, &value_changed));
 
         if (!is_node_valid)
         {Utils::LogError(mLogFile, "full_path", "does not exist or is invalid"); continue;}
@@ -435,16 +426,24 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
     return (0);
 }
 
+// 
+// kills all active processes, returns the number of killed
+//
 int Supervisor::killAllProcesses(bool restart)
 {
     if (restart)
     {
-        //mProcessList.clear();
         return (0);
     }
-    else
+    int n = 0;
+    for (auto & [key, process] : mProcessMap)
     {
-        // for (auto : )
+        if (process.get() != nullptr && process->isAlive())
+        {
+            process->stop();
+            Utils::LogStatus(mLogFile, "killing " + key + "\n");
+            n++;
+        }
     }
-    return (0);
+    return (n);
 }

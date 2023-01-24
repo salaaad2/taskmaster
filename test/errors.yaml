@@ -1,4 +1,6 @@
+# invalid tests:
 supervisor-processes:
+  # restart thrice because of a file not found error
   test_return_val:
     name: "no-file-or-dir"
     full_path: "./test/a.out"
@@ -9,8 +11,20 @@ supervisor-processes:
     restart_on_error: true
     number_of_restarts: 3
     exec_on_startup: true
+  # restart 4 times because of an invalid return value error
+  test_return_val:
+    name: "restart-invalid-return"
+    full_path: "./test/return_1.sh"
+    start_command: []
+    expected_return: 0
+    redirect_streams: false
+    output_redirect_path: ""
+    restart_on_error: true
+    number_of_restarts: 4
+    exec_on_startup: true
+  # program stopped before the elapsed time error
   test_restart_time_elapsed:
-    name: "restart_time_elapsed"
+    name: "restart-time-elapsed"
     full_path: "./test/sleep_for_two.sh"
     start_time: 5.0
     start_command: []
@@ -20,8 +34,9 @@ supervisor-processes:
     restart_on_error: true
     number_of_restarts: 3
     exec_on_startup: true
+  # success: start time not elapsed
   test_restart_time_good:
-    name: "restart_time_good"
+    name: "restart-time-good"
     full_path: "./test/sleep_for_two.sh"
     start_time: 1.5
     start_command: []

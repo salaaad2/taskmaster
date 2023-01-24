@@ -1,4 +1,5 @@
 supervisor-processes:
+  # basic ls output with no redirect
   basic:
     name: "ls"
     full_path: "/bin/ls"
@@ -9,6 +10,7 @@ supervisor-processes:
     restart_on_error: true
     number_of_restarts: 1
     exec_on_startup: true
+  # basic cat redirect output
   basic_output:
     name: "cat"
     full_path: "/bin/cat"
@@ -19,9 +21,10 @@ supervisor-processes:
     restart_on_error: true
     number_of_restarts: 1
     exec_on_startup: true
+  # test arguments with a script
   test_sleep_arguments:
     name: "sleep"
-    full_path: "/Users/fmoenne-/Documents/42projects/taskmaster/test/test_sleep_and_args.sh"
+    full_path: "./test/test_sleep_and_args.sh"
     start_command: ["--test", "--help"]
     expected_return: 0
     redirect_streams: true
@@ -29,34 +32,15 @@ supervisor-processes:
     restart_on_error: true
     number_of_restarts: 1
     exec_on_startup: true
-  ft_irc:
-    name: "ft_irc"
-    full_path: "/Users/fmoenne-/Documents/42projects/ft_irc/ircserv"
-    start_command: ["6668", "pass"]
+  # ls output redirection with a chdir
+  basic:
+    name: "ls-redirect"
+    full_path: "/bin/ls"
+    start_command: ["-l", "-a"]
     expected_return: 0
     redirect_streams: true
-    output_redirect_path: "./ircserv.log"
+    output_redirect_path: "./test/ls_chdir_output"
     restart_on_error: true
     number_of_restarts: 1
-    exec_on_startup: false
-  test_return_val:
-    name: "ret_val"
-    full_path: "/Users/fmoenne-/Documents/42projects/taskmaster/test/a.out"
-    start_command: []
-    expected_return: 12
-    redirect_streams: false
-    output_redirect_path: ""
-    restart_on_error: false
-    number_of_restarts: 0
     exec_on_startup: true
-  test_restart_time_elapsed:
-    name: "restart_time_elapsed"
-    full_path: "/Users/fmoenne-/Documents/42projects/taskmaster/test/sleep_for_five.sh"
-    start_time: 3.0
-    start_command: []
-    expected_return: 0
-    redirect_streams: false
-    output_redirect_path: ""
-    restart_on_error: true
-    number_of_restarts: 8
-    exec_on_startup: true
+    working_directory: "../"
