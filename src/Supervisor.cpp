@@ -10,6 +10,7 @@
 #include <sys/wait.h>
 #include <thread>
 #include <string>
+#include <unistd.h>
 #include <yaml-cpp/yaml.h>
 #include <ctime>
 
@@ -21,11 +22,11 @@ void SignalLambdaWrapper(int signal)
     sighup_handler(signal);
 }
 
-//
-// Get node by value, check it's existence and return a
-// default constructed value if not found, as well as setting is_node_valid to false
-// you can pass initial_value as a parameter to find out if the read value is different
-//
+/*
+** Get node by value, check it's existence and return a
+** default constructed value if not found, as well as setting is_node_valid to false
+** you can pass initial_value as a parameter to find out if the read value is different
+*/
 template <typename T>
 [[nodiscard]]
 T GetYAMLNode(
@@ -50,9 +51,9 @@ T GetYAMLNode(
     return (default_value == T()) ? T() : default_value;
 }
 
-//
-// discard modification arguments
-//
+/*
+** discard modification arguments
+*/
 template <typename T>
 [[nodiscard]]
 T GetYAMLNode(
@@ -156,12 +157,24 @@ void Supervisor::init()
     }
 }
 
+/*
+** call _start in another thread and allow the user back into the REPL
+*/
 int Supervisor::startProcess(std::shared_ptr<Process> & process)
 {
-    int number_of_restarts = process->getRestartOnError() ?
+    std::thread start_thread(&Supervisor::_start, this, std::ref(process));
+    start_thread.detach();
+    return 0;
+}
+
+/*
+**
+*/
+int Supervisor::_start(std::shared_ptr<Process> & process)
+{
+    int number_of_restarts = process->getShouldRestart() ?
         process->getNumberOfRestarts() :
         1;
-    std::cout.precision(17);
 
     for (auto i = 0; i < number_of_restarts; ++i)
     {
@@ -171,34 +184,13 @@ int Supervisor::startProcess(std::shared_ptr<Process> & process)
             Utils::LogError(
                 mLogFile,
                 process->getProcessName(),
-                "Ended unexpectedly.");
+                "Ended unexpectedly: strerror: " + process->getStrerror());
             continue;
         }
         // the process managed to start, monitor it in another thread
         //  and exit the loop
-        std::thread monitor_thread(&Supervisor::monitorProcess, this, std::ref(process));
-        monitor_thread.detach();
-        return 0;
-    }
-    return 0;
-}
-
-int Supervisor::stopProcess(std::shared_ptr<Process> & process)
-{
-    int stop_return_val = 0;
-
-    stop_return_val = process->stop();
-    if (stop_return_val == -1)
-    {
-        Utils::LogError(mLogFile, process->getProcessName(), "is not running.");
-    }
-    else if (stop_return_val == 1)
-    {
-        Utils::LogError(mLogFile, process->getProcessName(), "kill(SIGTERM) did not return as expected.");
-    }
-    else
-    {
-        Utils::LogSuccess(mLogFile, process->getProcessName(), "Terminated.");
+        monitorProcess(process);
+        break ;
     }
     return 0;
 }
@@ -209,6 +201,7 @@ int Supervisor::monitorProcess(std::shared_ptr<Process>& process)
     bool has_error = false;
 
     waitpid(process->getPid(), &ret, 0);
+
     process->setIsAlive(false);
     if (WIFEXITED(ret))
     {
@@ -221,9 +214,11 @@ int Supervisor::monitorProcess(std::shared_ptr<Process>& process)
             "Process " + process->getProcessName() +
             " killed by signal: " + std::to_string(WTERMSIG(ret)));
     }
+
     // if a start_time was set in config, we need to make sure that we did not return 
     //  too early by doing current ?> exec_time + start_time
-    if (std::time(nullptr) < (process->getExecTime() + process->getStartTime()))
+    if (process->getStartTime() != 0.0 &&
+        std::time(nullptr) < (process->getExecTime() + process->getStartTime()))
     {
         Utils::LogError(
             mLogFile,
@@ -246,6 +241,29 @@ int Supervisor::monitorProcess(std::shared_ptr<Process>& process)
             mLogFile,
             process->getProcessName(),
             "Terminated without errors.");
+    }
+    else
+    {
+    }
+    return 0;
+}
+
+int Supervisor::stopProcess(std::shared_ptr<Process> & process)
+{
+    int stop_return_val = 0;
+
+    stop_return_val = process->stop();
+    if (stop_return_val == -1)
+    {
+        Utils::LogError(mLogFile, process->getProcessName(), "is not running.");
+    }
+    else if (stop_return_val == 1)
+    {
+        Utils::LogError(mLogFile, process->getProcessName(), "kill(SIGTERM) did not return as expected.");
+    }
+    else
+    {
+        Utils::LogSuccess(mLogFile, process->getProcessName(), "Terminated.");
     }
     return 0;
 }
@@ -403,7 +421,7 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
         new_process->setRedirectStreams(GetYAMLNode<bool>(it, "redirect_streams", &is_node_valid));
         new_process->setOutputRedirectPath(GetYAMLNode<string>(it, "output_redirect_path", &is_node_valid));
         new_process->setExecOnStartup(GetYAMLNode<bool>(it, "exec_on_startup", &is_node_valid));
-        new_process->setRestartOnError(GetYAMLNode<bool>(it, "restart_on_error", &is_node_valid));
+        new_process->setShouldRestart(GetYAMLNode<int>(it, "should_restart", &is_node_valid));
         new_process->setKillSignal(GetYAMLNode<int>(it, "kill_signal", 0, &is_node_valid, &value_changed, SIGTERM));
         is_node_valid = false;
         auto umask = GetYAMLNode<int>(it, "umask", 0, &is_node_valid, &value_changed);

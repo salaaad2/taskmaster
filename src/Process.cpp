@@ -20,7 +20,6 @@
 
 Process::Process() :
     mIsAlive(false),
-    mRestartOnError(false),
     mExecOnStartup(false),
     mRedirectStreams(true),
     mExpectedReturn(0),
@@ -29,6 +28,7 @@ Process::Process() :
     mPid(0),
     mKillSignal(SIGTERM),
     mUmask(-1),
+    mShouldRestart(ShouldRestart::Never),
     mStartTime(0.00),
     mExecTime(0.00),
     mFullPath(""),
@@ -41,13 +41,14 @@ Process::Process() :
 
 Process::Process(
         bool isAlive,
-        bool restartOnError,
         bool execOnStartup,
         bool hasStandardStreams,
         int expectedReturn,
         int returnValue,
         int numberOfRestarts,
         int killSignal,
+        int umask,
+        ShouldRestart shouldRestart,
         const string &fullPath,
         const string &name,
         const string &workingDir,
@@ -55,7 +56,6 @@ Process::Process(
         const string &outputRedirectPath,
         const std::vector<string> &commandArgs) :
     mIsAlive(isAlive),
-    mRestartOnError(restartOnError),
     mExecOnStartup(execOnStartup),
     mRedirectStreams(hasStandardStreams),
     mExpectedReturn(expectedReturn),
@@ -63,7 +63,8 @@ Process::Process(
     mNumberOfRestarts(numberOfRestarts),
     mPid(0),
     mKillSignal(killSignal),
-    mUmask(-1),
+    mUmask(umask),
+    mShouldRestart(shouldRestart),
     mStartTime(0.0),
     mExecTime(0.0),
     mFullPath(fullPath),
@@ -212,14 +213,14 @@ void Process::setIsAlive(bool newIsAlive)
     mIsAlive = newIsAlive;
 }
 
-bool Process::getRestartOnError() const
+ShouldRestart Process::getShouldRestart() const
 {
-    return mRestartOnError;
+    return mShouldRestart;
 }
 
-void Process::setRestartOnError(bool newRestartOnError)
+void Process::setShouldRestart(int newShouldRestart)
 {
-    mRestartOnError = newRestartOnError;
+    mShouldRestart = (ShouldRestart)newShouldRestart;
 }
 
 bool Process::getExecOnStartup() const

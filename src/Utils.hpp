@@ -10,6 +10,8 @@ using std::string;
 
 namespace Utils {
 
+    static std::mutex write_mutex;
+
     void LogError(
         std::fstream & stream,
         const string & source,

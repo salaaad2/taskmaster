@@ -5,8 +5,6 @@
 
 namespace Utils {
 
-static std::mutex write_mutex;
-
 void Log(
     std::fstream & stream,
     const string & type,

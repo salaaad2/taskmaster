@@ -10,7 +10,6 @@
 #include <unordered_map>
 #include <functional>
 
-
 using std::string;
 
 class Supervisor {
@@ -36,13 +35,17 @@ class Supervisor {
         int loadConfig(const string & config_path, bool override_existing = false);
         int killAllProcesses(bool restart);
 
+        int _start(std::shared_ptr<Process> & process);
+        int monitorProcess(std::shared_ptr<Process> & process);
+
         /*
         ** functions called by REPL
         */
         int startProcess(std::shared_ptr<Process> & process);
         int stopProcess(std::shared_ptr<Process> & process);
         int getProcessStatus(std::shared_ptr<Process> & process);
-        int monitorProcess(std::shared_ptr<Process> & process);
+
+        /* process param can be ignored in these functions */
         int printHelp(std::shared_ptr<Process> & process);
         int reloadConfig(std::shared_ptr<Process> &process);
         int exit(std::shared_ptr<Process> &process);

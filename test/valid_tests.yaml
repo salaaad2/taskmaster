@@ -7,7 +7,7 @@ supervisor-processes:
     expected_return: 0
     redirect_streams: false
     output_redirect_path: ""
-    restart_on_error: true
+    should_restart: 1
     number_of_restarts: 1
     exec_on_startup: true
   # basic cat redirect output
@@ -18,7 +18,7 @@ supervisor-processes:
     expected_return: 0
     redirect_streams: true
     output_redirect_path: "./test/cat_file"
-    restart_on_error: true
+    should_restart: 1
     number_of_restarts: 1
     exec_on_startup: true
   # test arguments with a script
@@ -29,7 +29,7 @@ supervisor-processes:
     expected_return: 0
     redirect_streams: true
     output_redirect_path: "./test/sleep_file"
-    restart_on_error: true
+    should_restart: 1
     number_of_restarts: 1
     exec_on_startup: true
   # ls output redirection with a chdir
@@ -40,7 +40,7 @@ supervisor-processes:
     expected_return: 0
     redirect_streams: true
     output_redirect_path: "./test/ls_chdir_output_file"
-    restart_on_error: true
+    should_restart: 1
     number_of_restarts: 1
     exec_on_startup: true
     working_directory: "../"
@@ -52,7 +52,7 @@ supervisor-processes:
     expected_return: 0
     redirect_streams: true
     output_redirect_path: "./test/ls_invalid_chdir_file"
-    restart_on_error: true
+    should_restart: 1
     number_of_restarts: 1
     exec_on_startup: true
     working_directory: "/qwe/test"
@@ -64,7 +64,7 @@ supervisor-processes:
     expected_return: 0
     redirect_streams: true
     output_redirect_path: "./test/ls_invalid_umask_file"
-    restart_on_error: true
+    should_restart: 1
     number_of_restarts: 1
     exec_on_startup: true
     umask: 044

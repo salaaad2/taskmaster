@@ -5,22 +5,28 @@
 
 using std::string;
 
+typedef enum ShouldRestart {
+    Never,
+    UnexpectedExit,
+    Always
+} ShouldRestart;
+
 class Process {
 public:
-
         /*
         ** xtors
         */
         Process();
         Process(
             bool isAlive,
-            bool restartOnError,
             bool execOnStartup,
             bool hasStandardStreams,
             int expectedReturn,
             int returnValue,
             int numberOfRestarts,
             int killSignal,
+            int umask,
+            ShouldRestart shouldRestart,
             const string &fullPath,
             const string &processName,
             const string &workingDir,
@@ -40,8 +46,6 @@ public:
         */
         bool isAlive() const;
         void setIsAlive(bool newIsAlive);
-        bool getRestartOnError() const;
-        void setRestartOnError(bool newRestartOnError);
         bool getExecOnStartup() const;
         void setExecOnStartup(bool newExecOnStartup);
         bool getRedirectStreams() const;
@@ -58,6 +62,8 @@ public:
         void setKillSignal(int killSignal);
         int  getUmask() const;
         void setUmask(int umask);
+        ShouldRestart getShouldRestart() const;
+        void setShouldRestart(int newShouldRestart);
         long double getStartTime() const;
         void setStartTime(long double newStartTime);
         long double getExecTime() const;
@@ -85,7 +91,6 @@ private:
         ** class members
         */
         bool mIsAlive;
-        bool mRestartOnError;
         bool mExecOnStartup;
         bool mRedirectStreams;
         int mExpectedReturn;
@@ -94,6 +99,7 @@ private:
         int mPid;
         int mKillSignal;
         int mUmask;
+        ShouldRestart mShouldRestart;
         long double mStartTime;
         long double mExecTime;
         string mStrerror;
