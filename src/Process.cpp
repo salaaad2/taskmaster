@@ -84,94 +84,87 @@ int Process::start()
     int count, err;
 
     // pipe for stdout
-    if (pipe(pipe_fds) < 0)
+    if (::pipe(pipe_fds) < 0)
     {return 1;}
 
     // pipe for the `self-pipe trick`
-    if (pipe(fork_pipes) < 0)
+    if (::pipe(fork_pipes) < 0)
     {return 1;}
-    if (fcntl(fork_pipes[1], F_SETFD, fcntl(fork_pipes[1], F_GETFD) | FD_CLOEXEC) < 0)
+    if (::fcntl(fork_pipes[1], F_SETFD, fcntl(fork_pipes[1], F_GETFD) | FD_CLOEXEC) < 0)
     {return 1;}
 
     // this is a bridge
-    if ((pid = fork()) < 0)
+    if ((pid = ::fork()) < 0)
     {return 1;}
     if (pid == 0)
     {
-        mode_t mask = 0644;
+        mode_t mask = 0;
         if (getUmask() != -1)
         {
-            std::cout.flush();
             mask = getUmask();
-            std::cout << "change mask: " << mask << "\n";
-            umask(mask);
+            ::umask(mask);
         }
-        else
-        {
-            std::cout << "default: " << mask << "\n";
-            umask(mask);
-        }
+
         // output redirection
         int fd = STDOUT_FILENO;
         if (getRedirectStreams())
         {
-            fd = open(getOutputRedirectPath().c_str(), O_CREAT | O_TRUNC | O_WRONLY, mask);
+            // if umask() was called, open() is affected.
+            fd = ::open(getOutputRedirectPath().c_str(), O_CREAT | O_TRUNC | O_WRONLY, 0644);
             if (fd == -1)
             {
-                write(fork_pipes[1], &errno, sizeof(int));
-                _exit(1);
+                ::write(fork_pipes[1], &errno, sizeof(int));
+                ::exit(1);
             }
         }
         else
         {
             fd = pipe_fds[1];
         }
-        dup2(fd, STDOUT_FILENO);
-        dup2(fd, STDERR_FILENO);
-        close(pipe_fds[0]);
-        close(pipe_fds[1]);
 
-        close(fork_pipes[0]);
-
+        // pipes
+        ::dup2(fd, STDOUT_FILENO);
+        ::dup2(fd, STDERR_FILENO);
+        ::close(pipe_fds[0]);
+        ::close(pipe_fds[1]);
+        ::close(fork_pipes[0]);
         if (getWorkingDir() != "")
         {
-            if (chdir(getWorkingDir().c_str()) < 0)
+            if (::chdir(getWorkingDir().c_str()) < 0)
             {
-                write(fork_pipes[1], &errno, sizeof(int));
-                _exit(1);
+                ::write(fork_pipes[1], &errno, sizeof(int));
+                ::_exit(1);
             }
         }
 
         std::vector<const char*> arg_v =
             Utils::ContainerToConstChar(mProcessName, getCommandArguments());
         int exec_return =
-            execv(mFullPath.c_str(), const_cast<char*const*>(arg_v.data()));
+            ::execv(mFullPath.c_str(), const_cast<char*const*>(arg_v.data()));
         // execv error: write errno to the pipe opened in the parent process
-        write(fork_pipes[1], &errno, sizeof(int));
-        _exit(exec_return);
+        ::write(fork_pipes[1], &errno, sizeof(int));
+        ::_exit(exec_return);
     }
     else
     {
         // read bytes from the pipe in the child process, which are sent only
         //  if execve failed (eg: upon call to a non-existent file)
-        close(fork_pipes[1]);
-        while ((count = read(fork_pipes[0], &err, sizeof(errno))) == -1)
-        {if (errno != EAGAIN && errno != EINTR) break;}
+        ::close(fork_pipes[1]);
+        while ((count = ::read(fork_pipes[0], &err, sizeof(errno))) == -1)
+        { if (errno != EAGAIN && errno != EINTR) {break;} }
 
+        ::close(fork_pipes[0]);
+        ::close(pipe_fds[1]);
         if (count)
         {
             // setStrError(strerror(err));
-            setPid(-1);
             setIsAlive(false);
+            return -1;
         }
-        else
-        {
-            setExecTime(std::time(nullptr));
-            setPid(pid);
-            setIsAlive(true);
-        }
-        close(fork_pipes[0]);
-        close(pipe_fds[1]);
+
+        setExecTime(std::time(nullptr));
+        setPid(pid);
+        setIsAlive(true);
     }
     return getReturnValue();
 }
@@ -327,6 +320,16 @@ long double Process::getExecTime() const
 void Process::setExecTime(long double newExecTime)
 {
     mExecTime = newExecTime;
+}
+
+const string &Process::getStrerror() const
+{
+    return mFullPath;
+}
+
+void Process::setStrerror(const string &newStrerror)
+{
+    mStrerror = newStrerror;
 }
 
 const string &Process::getFullPath() const

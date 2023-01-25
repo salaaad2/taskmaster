@@ -64,6 +64,8 @@ public:
         void setExecTime(long double newExecTime);
         const string &getFullPath() const;
         void setFullPath(const string &newFullPath);
+        const string &getStrerror() const;
+        void setStrerror(const string &newStrerror);
         const string &getProcessName() const;
         void setProcessName(const string &newProcessName);
         const string &getWorkingDir() const;
@@ -94,6 +96,7 @@ private:
         int mUmask;
         long double mStartTime;
         long double mExecTime;
+        string mStrerror;
         string mFullPath;
         string mProcessName;
         string mWorkingDir;

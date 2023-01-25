@@ -67,5 +67,4 @@ supervisor-processes:
     restart_on_error: true
     number_of_restarts: 1
     exec_on_startup: true
-    umask: 0001
-    working_directory: "../"
+    umask: 044
