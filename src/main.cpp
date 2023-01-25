@@ -2,7 +2,7 @@
 #include "Supervisor.hpp"
 #include "Utils.hpp"
 
-int main(int ac, char **av)
+int main(int ac, char **av, char *envp[])
 {
     string config_file, log_file;
     char * opt = NULL;
@@ -23,7 +23,7 @@ int main(int ac, char **av)
     if (config_file.empty())
     {return Utils::MissingArgument("--config-file");}
 
-    Supervisor s(config_file, log_file);
+    Supervisor s(config_file, log_file, envp);
     if (!s.isConfigValid())
     {
         std::cerr << "error: invalid file provided: " << config_file << "\n";

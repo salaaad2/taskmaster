@@ -19,7 +19,7 @@ class Supervisor {
         ** xtors
         */
         Supervisor();
-        Supervisor(const string config_path, const string log_file_path);
+        Supervisor(const string config_path, const string log_file_path, char *env[]);
         ~Supervisor();
 
         /*
@@ -36,7 +36,7 @@ class Supervisor {
         int killAllProcesses(bool restart);
 
         int _start(std::shared_ptr<Process> & process);
-        int monitorProcess(std::shared_ptr<Process> & process);
+        int _monitor(std::shared_ptr<Process> & process);
 
         /*
         ** functions called by REPL
@@ -58,6 +58,7 @@ class Supervisor {
         bool mIsConfigValid;
         string mConfigFilePath;
         string mLogFilePath;
+        char ** mInitialEnvironment;
         std::fstream mLogFile;
         std::vector<string> mCommandHistory;
         std::unordered_map<string, std::shared_ptr<Process> > mProcessMap;

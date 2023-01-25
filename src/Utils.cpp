@@ -55,8 +55,8 @@ void LogStatus(
 ** separator
  */
 std::vector<std::string> SplitString(
-    std::string source,
-    const std::string &separator)
+    string source,
+    const string &separator)
 {
     std::vector<std::string> out;
     int last_separator_pos = 0;

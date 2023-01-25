@@ -24,9 +24,9 @@ namespace Utils {
         std::fstream & stream,
         const string & custom);
 
-    std::vector<std::string> SplitString(
-        std::string source,
-        const std::string &separator);
+    std::vector<string> SplitString(
+        string source,
+        const string &separator);
 
     /*
     ** with source a container with begin and end(),
@@ -35,7 +35,7 @@ namespace Utils {
      */
     template <typename T>
     std::vector<const char*> ContainerToConstChar(
-            const std::string & name,
+            const string & name,
             const T & source)
     {
         std::vector<const char*> out;
@@ -51,11 +51,11 @@ namespace Utils {
 
 
     template <typename T>
-    std::string JoinStrings(
+    string JoinStrings(
             const T & source,
-            const std::string & separator)
+            const string & separator)
     {
-        std::string out;
+        string out;
         auto it = source.begin();
         out.append(*it);
         ++it;

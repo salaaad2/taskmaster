@@ -69,14 +69,16 @@ T GetYAMLNode(
 
 Supervisor::Supervisor()
 {
-    std::cout << "If you see this, you are in grave danger.";
+    std::cout << "If you see this, you are in grave danger.\n";
 }
 
 Supervisor::Supervisor(
     const string config_path,
-    const string log_file_path) :
+    const string log_file_path,
+    char *envp[]) :
       mIsConfigValid(false),
-      mConfigFilePath(config_path)
+      mConfigFilePath(config_path),
+      mInitialEnvironment(envp)
 {
     loadConfig(mConfigFilePath);
     mLogFilePath = (log_file_path.empty()) ?
@@ -126,9 +128,9 @@ void Supervisor::init()
     mCommandMap["list"]    = std::bind(&Supervisor::listProcesses, this, std::placeholders::_1);
 
     // start REPL
-    std::string line;
+    string line;
     std::cout << "taskmasterctl>$ ";
-    for (std::string line;
+    for (string line;
          std::getline(std::cin, line);
          std::cout << "taskmasterctl>$ ")
     {
@@ -172,7 +174,7 @@ int Supervisor::startProcess(std::shared_ptr<Process> & process)
 */
 int Supervisor::_start(std::shared_ptr<Process> & process)
 {
-    int number_of_restarts = process->getShouldRestart() ?
+    int number_of_restarts = (process->getShouldRestart() != 0) ?
         process->getNumberOfRestarts() :
         1;
 
@@ -184,18 +186,30 @@ int Supervisor::_start(std::shared_ptr<Process> & process)
             Utils::LogError(
                 mLogFile,
                 process->getProcessName(),
-                "Ended unexpectedly: strerror: " + process->getStrerror());
+                "Did not start. strerror: " + process->getStrerror());
             continue;
         }
-        // the process managed to start, monitor it in another thread
-        //  and exit the loop
-        monitorProcess(process);
-        break ;
+        // the process managed to start, monitor it until it ends
+        int ret = _monitor(process);
+        switch (process->getShouldRestart())
+        {
+        case ShouldRestart::Never:
+            return 0;
+        case ShouldRestart::UnexpectedExit:
+            if (ret != 0)
+            {continue;}
+            else 
+            {return 0;}
+        case ShouldRestart::Always:
+            i = 0;
+            continue;
+        }
+        return 0;
     }
     return 0;
 }
 
-int Supervisor::monitorProcess(std::shared_ptr<Process>& process)
+int Supervisor::_monitor(std::shared_ptr<Process>& process)
 {
     int ret = 0;
     bool has_error = false;
@@ -242,10 +256,14 @@ int Supervisor::monitorProcess(std::shared_ptr<Process>& process)
             process->getProcessName(),
             "Terminated without errors.");
     }
-    else
+    else 
     {
+        Utils::LogError(
+            mLogFile,
+            process->getProcessName(),
+            "Encountered problems.");
     }
-    return 0;
+    return has_error;
 }
 
 int Supervisor::stopProcess(std::shared_ptr<Process> & process)
@@ -290,7 +308,7 @@ int Supervisor::getProcessStatus(std::shared_ptr<Process> & process)
 int Supervisor::printHelp(std::shared_ptr<Process> & process)
 {
     IGNORE(process);
-    std::string out;
+    string out;
     out += "=========Taskmaster========\n";
     out += "----available commands:----\n";
     out += "help          : Print this help\n";
@@ -303,10 +321,10 @@ int Supervisor::printHelp(std::shared_ptr<Process> & process)
     return 0;
 }
 
-//
-// reload process configuration, or, if no process is specified,
-//  reload full config
-//
+/*
+** reload process configuration, or, if no process is specified,
+**  reload full config
+*/
 int Supervisor::reloadConfig(std::shared_ptr<Process> & process)
 {
     IGNORE(process);
@@ -326,7 +344,7 @@ int Supervisor::exit(std::shared_ptr<Process>& process)
 int Supervisor::history(std::shared_ptr<Process>& process)
 {
     IGNORE(process);
-    std::string out =
+    string out =
         "==== taskmaster command history ====\n";
 
     if (!mCommandHistory.empty())
@@ -338,7 +356,7 @@ int Supervisor::history(std::shared_ptr<Process>& process)
 int Supervisor::listProcesses(std::shared_ptr<Process>& process)
 {
     IGNORE(process);
-    std::string out =
+    string out =
         "==== taskmaster configured programs list ====\n";
     for (auto & v : mProcessMap)
     {
@@ -351,17 +369,18 @@ int Supervisor::listProcesses(std::shared_ptr<Process>& process)
     return 0;
 }
 
-//
-// load configuration from the provided .yaml file;
-// some options are mandatoru and their absence will raise an error
-//
-// upon reload, override_existing is set to true; for processes whose parameters were changed,
-// only a few of them will cause the program to restart them.
-// these are:
-// ['', '']
-//
+/*
+** load configuration from the provided .yaml file;
+** some options are mandatoru and their absence will raise an error
+**
+** upon reload, override_existing is set to true; for processes whose parameters were changed,
+** only a few of them will cause the program to restart them.
+** these are:
+** ['', '']
+*/
 int Supervisor::loadConfig(const string & config_path, bool override_existing)
 {
+    IGNORE(mInitialEnvironment);
     YAML::Node config;
     try {
         config = YAML::LoadFile(config_path);
@@ -421,7 +440,10 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
         new_process->setRedirectStreams(GetYAMLNode<bool>(it, "redirect_streams", &is_node_valid));
         new_process->setOutputRedirectPath(GetYAMLNode<string>(it, "output_redirect_path", &is_node_valid));
         new_process->setExecOnStartup(GetYAMLNode<bool>(it, "exec_on_startup", &is_node_valid));
+
+        // see Process.hpp for possible values and usage
         new_process->setShouldRestart(GetYAMLNode<int>(it, "should_restart", &is_node_valid));
+
         new_process->setKillSignal(GetYAMLNode<int>(it, "kill_signal", 0, &is_node_valid, &value_changed, SIGTERM));
         is_node_valid = false;
         auto umask = GetYAMLNode<int>(it, "umask", 0, &is_node_valid, &value_changed);
