@@ -157,7 +157,7 @@ int Process::start()
         ::close(pipe_fds[1]);
         if (count)
         {
-            // setStrError(strerror(err));
+            setStrerror(strerror(err));
             setIsAlive(false);
             return -1;
         }
