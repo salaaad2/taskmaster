@@ -18,67 +18,6 @@
 
 #include "Utils.hpp"
 
-Process::Process() :
-    mIsAlive(false),
-    mExecOnStartup(false),
-    mRedirectStreams(true),
-    mExpectedReturn(0),
-    mReturnValue(-1),
-    mNumberOfRestarts(0),
-    mPid(0),
-    mKillSignal(SIGTERM),
-    mUmask(-1),
-    mShouldRestart(ShouldRestart::Never),
-    mStartTime(0.00),
-    mExecTime(0.00),
-    mFullPath(""),
-    mProcessName(""),
-    mWorkingDir(""),
-    mAdditionalEnv(""),
-    mOutputStreamRedirectPath(""),
-    mCommandArguments(std::vector<string>())
-{}
-
-Process::Process(
-        bool isAlive,
-        bool execOnStartup,
-        bool hasStandardStreams,
-        int expectedReturn,
-        int returnValue,
-        int numberOfRestarts,
-        int numberOfProcesses,
-        int killSignal,
-        int umask,
-        ShouldRestart shouldRestart,
-        const string &fullPath,
-        const string &name,
-        const string &workingDir,
-        const string &additionalEnv,
-        const string &outputRedirectPath,
-        const std::vector<string> &commandArgs) :
-    mIsAlive(isAlive),
-    mExecOnStartup(execOnStartup),
-    mRedirectStreams(hasStandardStreams),
-    mExpectedReturn(expectedReturn),
-    mReturnValue(returnValue),
-    mNumberOfRestarts(numberOfRestarts),
-    mNumberOfProcesses(numberOfProcesses),
-    mPid(0),
-    mKillSignal(killSignal),
-    mUmask(umask),
-    mShouldRestart(shouldRestart),
-    mStartTime(0.0),
-    mExecTime(0.0),
-    mFullPath(fullPath),
-    mProcessName(name),
-    mWorkingDir(workingDir),
-    mAdditionalEnv(additionalEnv),
-    mOutputStreamRedirectPath(outputRedirectPath),
-    mCommandArguments(commandArgs)
-{}
-
-Process::~Process() {}
-
 int Process::start()
 {
     pid_t pid;
@@ -204,6 +143,89 @@ std::ostream & operator<<(std::ostream & s, const Process & src)
       << "\n";
     return s;
 }
+
+Process::Process() :
+    mIsAlive(false),
+    mExecOnStartup(false),
+    mRedirectStreams(true),
+    mExpectedReturn(0),
+    mReturnValue(-1),
+    mNumberOfRestarts(0),
+    mPid(0),
+    mKillSignal(SIGTERM),
+    mUmask(-1),
+    mShouldRestart(ShouldRestart::Never),
+    mStartTime(0.00),
+    mExecTime(0.00),
+    mFullPath(""),
+    mProcessName(""),
+    mWorkingDir(""),
+    mAdditionalEnv(""),
+    mOutputStreamRedirectPath(""),
+    mCommandArguments(std::vector<string>())
+{}
+
+Process::Process(const Process & process)
+{
+    mIsAlive = process.mIsAlive;
+    mExecOnStartup = process.mExecOnStartup;
+    mRedirectStreams = process.mRedirectStreams;
+    mExpectedReturn = process.mExpectedReturn;
+    mReturnValue = 0;
+    mNumberOfRestarts = process.mNumberOfRestarts;
+    mPid = process.mPid;
+    mKillSignal = process.mKillSignal;
+    mUmask = process.mUmask;
+    mShouldRestart = process.mShouldRestart;
+    mStartTime =  0.0;
+    mExecTime = 0.0;
+    mFullPath = process.mFullPath;
+    mProcessName = process.mProcessName;
+    mWorkingDir = process.mWorkingDir;
+    mAdditionalEnv = process.mAdditionalEnv;
+    mOutputStreamRedirectPath = process.mOutputStreamRedirectPath;
+    mCommandArguments = process.mCommandArguments;
+}
+
+Process::Process(
+        bool isAlive,
+        bool execOnStartup,
+        bool hasStandardStreams,
+        int expectedReturn,
+        int returnValue,
+        int numberOfRestarts,
+        int numberOfProcesses,
+        int killSignal,
+        int umask,
+        ShouldRestart shouldRestart,
+        const string &fullPath,
+        const string &name,
+        const string &workingDir,
+        const string &additionalEnv,
+        const string &outputRedirectPath,
+        const std::vector<string> &commandArgs) :
+    mIsAlive(isAlive),
+    mExecOnStartup(execOnStartup),
+    mRedirectStreams(hasStandardStreams),
+    mExpectedReturn(expectedReturn),
+    mReturnValue(returnValue),
+    mNumberOfRestarts(numberOfRestarts),
+    mNumberOfProcesses(numberOfProcesses),
+    mPid(0),
+    mKillSignal(killSignal),
+    mUmask(umask),
+    mShouldRestart(shouldRestart),
+    mStartTime(0.0),
+    mExecTime(0.0),
+    mFullPath(fullPath),
+    mProcessName(name),
+    mWorkingDir(workingDir),
+    mAdditionalEnv(additionalEnv),
+    mOutputStreamRedirectPath(outputRedirectPath),
+    mCommandArguments(commandArgs)
+{}
+
+Process::~Process() {}
 
 bool Process::isAlive() const
 {
@@ -404,3 +426,4 @@ void Process::appendCommandArgument(const string &newStartCommand)
 {
     mCommandArguments.push_back(newStartCommand);
 }
+

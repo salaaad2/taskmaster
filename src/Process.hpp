@@ -17,6 +17,7 @@ public:
         ** xtors
         */
         Process();
+        Process(const Process & process);
         Process(
             bool isAlive,
             bool execOnStartup,

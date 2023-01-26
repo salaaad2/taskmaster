@@ -2,6 +2,7 @@
 #include "Supervisor.hpp"
 #include "Utils.hpp"
 
+#include <algorithm>
 #include <chrono>
 #include <exception>
 #include <functional>
@@ -64,6 +65,11 @@ T GetYAMLNode(
     bool useless_bool;
     T useless_T = T();
     return (GetYAMLNode(node, node_name, useless_T, is_node_valid, &useless_bool));
+}
+
+string GetUniqueName(const string & base_name, int number)
+{
+    return base_name + "_" + std::to_string(number);
 }
 };
 
@@ -170,12 +176,8 @@ void Supervisor::init()
 */
 int Supervisor::startProcess(std::shared_ptr<Process> & process)
 {
-    for (auto i = 0; i < process->getNumberOfProcesses(); ++i)
-    {
-        // copy constructor here
-        std::thread start_thread(&Supervisor::_start, this, std::ref(process));
-        start_thread.detach();
-    }
+    std::thread start_thread(&Supervisor::_start, this, std::ref(process));
+    start_thread.detach();
     return 0;
 }
 
@@ -470,12 +472,33 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
         {
             new_process->appendCommandArgument(c.as<string>());
         }
-        std::cout << *new_process.get();
-        mProcessMap[new_process->getProcessName()] = new_process;
         is_node_valid = true;
+
+        // if we want to create multiple processes, create a new one using the copy constructor,
+        //  give it a unique name and add it to mProcessMap
+        int n_processes = GetYAMLNode<int>(it, "number_of_processes", &is_node_valid);
+        if (is_node_valid && n_processes > 1)
+        {
+            auto initial_name = new_process->getProcessName();
+            mProcessMap[new_process->getProcessName()] = new_process;
+
+            for (int i = 0; i < n_processes; ++i)
+            {
+                auto name = GetUniqueName(initial_name, i);
+                auto copy_process = std::make_shared<Process>(Process(*new_process.get()));
+                copy_process->setProcessName(name);
+
+                mProcessMap[name] = copy_process;
+            }
+        }
+        else
+        {
+            mProcessMap[new_process->getProcessName()] = new_process;
+        }
 
         if (restart)
         {
+            //std::cout << *new_process.get();
             new_process->stop();
             new_process->start();
         }
