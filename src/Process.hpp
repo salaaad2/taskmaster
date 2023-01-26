@@ -24,6 +24,7 @@ public:
             int expectedReturn,
             int returnValue,
             int numberOfRestarts,
+            int numberOfProcesses,
             int killSignal,
             int umask,
             ShouldRestart shouldRestart,
@@ -56,6 +57,8 @@ public:
         void setExpectedReturn(int newExpectedReturn);
         int  getNumberOfRestarts() const;
         void setNumberOfRestarts(int newNumberOfRestarts);
+        int  getNumberOfProcesses() const;
+        void setNumberOfProcesses(int newNumberOfProcesses);
         int  getPid() const;
         void setPid(int newPid);
         int  getKillSignal() const;
@@ -96,6 +99,7 @@ private:
         int mExpectedReturn;
         int mReturnValue;
         int mNumberOfRestarts;
+        int mNumberOfProcesses;
         int mPid;
         int mKillSignal;
         int mUmask;

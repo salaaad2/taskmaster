@@ -5,7 +5,7 @@ supervisor-processes:
     full_path: "/bin/ls"
     start_command: ["-l", "-a"]
     expected_return: 0
-    redirect_streams: true
+    redirect_streams: false
     output_redirect_path: ""
     should_restart: 1
     number_of_restarts: 1

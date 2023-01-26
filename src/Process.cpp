@@ -46,6 +46,7 @@ Process::Process(
         int expectedReturn,
         int returnValue,
         int numberOfRestarts,
+        int numberOfProcesses,
         int killSignal,
         int umask,
         ShouldRestart shouldRestart,
@@ -61,6 +62,7 @@ Process::Process(
     mExpectedReturn(expectedReturn),
     mReturnValue(returnValue),
     mNumberOfRestarts(numberOfRestarts),
+    mNumberOfProcesses(numberOfProcesses),
     mPid(0),
     mKillSignal(killSignal),
     mUmask(umask),
@@ -158,7 +160,6 @@ int Process::start()
         ::close(pipe_fds[1]);
         if (count)
         {
-            std::cout << "what ? " << strerror(err);
             setStrerror(strerror(err));
             setIsAlive(false);
             return -1;
@@ -182,7 +183,7 @@ int Process::stop()
     else
     {
         ret = kill(mPid, mKillSignal);
-        setIsAlive(false);
+        setIsAlive(ret == 0);
         return (ret == 0) ? 0 : 1;
     }
     return ret;
@@ -272,6 +273,16 @@ int Process::getNumberOfRestarts() const
 void Process::setNumberOfRestarts(int newNumberOfRestarts)
 {
     mNumberOfRestarts = newNumberOfRestarts;
+}
+
+int Process::getNumberOfProcesses() const
+{
+    return mNumberOfProcesses;
+}
+
+void Process::setNumberOfProcesses(int newNumberOfProcesses)
+{
+    mNumberOfProcesses = newNumberOfProcesses;
 }
 
 int Process::getPid() const

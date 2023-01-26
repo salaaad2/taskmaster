@@ -43,6 +43,6 @@ supervisor-processes:
     expected_return: 0
     redirect_streams: false
     output_redirect_path: ""
-    should_restart: 1
+    should_restart: 2
     number_of_restarts: 3
     exec_on_startup: true

@@ -91,12 +91,14 @@ Supervisor::Supervisor(
 Supervisor::~Supervisor()
 {
     // make sure to stop all started programs if we exit the interpreter
+    Utils::LogStatus(mLogFile, "~Supervisor\n");
     this->exit(mProcessMap[""]);
     Utils::LogStatus(mLogFile, "Exiting taskmaster...\n");
     for (auto p : mProcessMap)
     {
-    p.second.reset();
+        p.second.reset();
     }
+    ::exit(0);
 }
 
 [[nodiscard]]
@@ -168,9 +170,12 @@ void Supervisor::init()
 */
 int Supervisor::startProcess(std::shared_ptr<Process> & process)
 {
-    //std::thread start_thread(&Supervisor::_start, this, std::ref(process));
-    //start_thread.detach();
-    _start(process);
+    for (auto i = 0; i < process->getNumberOfProcesses(); ++i)
+    {
+        // copy constructor here
+        std::thread start_thread(&Supervisor::_start, this, std::ref(process));
+        start_thread.detach();
+    }
     return 0;
 }
 
@@ -284,7 +289,9 @@ int Supervisor::stopProcess(std::shared_ptr<Process> & process)
     }
     else if (stop_return_val == 1)
     {
-        Utils::LogError(mLogFile, process->getProcessName(), "kill(SIGTERM) did not return as expected.");
+        // should we wait and force kill ?
+        Utils::LogError(mLogFile, process->getProcessName(), 
+            "kill(" + std::to_string(process->getKillSignal()) + ") did not return as expected.");
     }
     else
     {
@@ -342,6 +349,8 @@ int Supervisor::exit(std::shared_ptr<Process>& process)
 {
     IGNORE(process);
 
+    std::cout << "exit()\n";
+    std::cout.flush();
     int n = killAllProcesses(false);
     Utils::LogStatus(mLogFile, "Killed: " + std::to_string(n) + " processe(s);\n");
     return 0;
