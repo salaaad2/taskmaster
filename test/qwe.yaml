@@ -1,0 +1,14 @@
+supervisor-processes:
+  # basic ls output with no redirect
+  basic:
+    name: "ls"
+    full_path: "/bin/ls"
+    start_command: ["-l", "-a"]
+    expected_return: 0
+    redirect_streams: true
+    output_redirect_path: ""
+    should_restart: 1
+    number_of_restarts: 1
+    exec_on_startup: true
+    working_directory: ""
+

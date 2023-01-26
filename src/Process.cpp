@@ -134,7 +134,7 @@ int Process::start()
             if (::chdir(getWorkingDir().c_str()) < 0)
             {
                 ::write(fork_pipes[1], &errno, sizeof(int));
-                ::_exit(1);
+                ::exit(1);
             }
         }
 
@@ -144,7 +144,7 @@ int Process::start()
             ::execv(mFullPath.c_str(), const_cast<char*const*>(arg_v.data()));
         // execv error: write errno to the pipe opened in the parent process
         ::write(fork_pipes[1], &errno, sizeof(int));
-        ::_exit(exec_return);
+        ::exit(exec_return);
     }
     else
     {
@@ -158,6 +158,7 @@ int Process::start()
         ::close(pipe_fds[1]);
         if (count)
         {
+            std::cout << "what ? " << strerror(err);
             setStrerror(strerror(err));
             setIsAlive(false);
             return -1;

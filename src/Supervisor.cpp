@@ -93,6 +93,10 @@ Supervisor::~Supervisor()
     // make sure to stop all started programs if we exit the interpreter
     this->exit(mProcessMap[""]);
     Utils::LogStatus(mLogFile, "Exiting taskmaster...\n");
+    for (auto p : mProcessMap)
+    {
+    p.second.reset();
+    }
 }
 
 [[nodiscard]]
@@ -164,8 +168,9 @@ void Supervisor::init()
 */
 int Supervisor::startProcess(std::shared_ptr<Process> & process)
 {
-    std::thread start_thread(&Supervisor::_start, this, std::ref(process));
-    start_thread.detach();
+    //std::thread start_thread(&Supervisor::_start, this, std::ref(process));
+    //start_thread.detach();
+    _start(process);
     return 0;
 }
 
@@ -197,9 +202,11 @@ int Supervisor::_start(std::shared_ptr<Process> & process)
             return 0;
         case ShouldRestart::UnexpectedExit:
             if (ret != 0)
-            {continue;}
+            {
+                continue;}
             else 
-            {return 0;}
+            {
+                return 0;}
         case ShouldRestart::Always:
             i = 0;
             continue;
@@ -337,7 +344,6 @@ int Supervisor::exit(std::shared_ptr<Process>& process)
 
     int n = killAllProcesses(false);
     Utils::LogStatus(mLogFile, "Killed: " + std::to_string(n) + " processe(s);\n");
-    ::exit(0);
     return 0;
 }
 
