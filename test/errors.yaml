@@ -60,6 +60,7 @@ supervisor-processes:
     exec_on_startup: true
   # with two possible return values, 
   #  demonstrate that the environment variables apply
+  #  and that return values are tested
   multiple_return_env:
     name: "multiple-return-1"
     full_path: "./test/ret_env.sh"

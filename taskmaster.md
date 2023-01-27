@@ -10,9 +10,6 @@ sanity check:
 - How long to wait after a graceful stop before killing the program
 
 # In Progress
-## multiple acceptable return values
-## additional/different env values
-single function call ? execv() -> execve() + add new values to envp arg
 
 # Done
 ###  How long the program should be running after it’s started for it to be considered successfully started"
@@ -27,4 +24,6 @@ single function call ? execv() -> execve() + add new values to envp arg
 ###  start umask single function call ?->umask()
 ###  restart n times from monitorProcess
 ###  Whether the program should be restarted never, unexpected exit, or always (0, 1, 2)
-### The number of processes to start and keep running
+###  The number of processes to start and keep running
+###  additional/different env values single function call ? execv() -> execve() + add new values to envp arg
+###  multiple acceptable return values
