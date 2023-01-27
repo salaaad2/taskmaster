@@ -85,7 +85,10 @@ int Process::start()
         std::vector<const char*> env_v =
             Utils::ContainerToConstChar("", getAdditionalEnv());
         int exec_return =
-            ::execv(mFullPath.c_str(), const_cast<char*const*>(arg_v.data()));
+            ::execve(
+                mFullPath.c_str(),
+                const_cast<char*const*>(arg_v.data()),
+                const_cast<char*const*>(env_v.data()));
         // execv error: write errno to the pipe opened in the parent process
         ::write(fork_pipes[1], &errno, sizeof(int));
         ::exit(exec_return);
@@ -417,6 +420,16 @@ const std::vector<string> &Process::getAdditionalEnv() const
 
 void Process::addAdditionalEnvValue(const string &newAdditionalEnvValue)
 {
+    auto name = newAdditionalEnvValue.substr(0, newAdditionalEnvValue.find("="));
+
+    // replace value if an envvar with the same name already exists
+    for (auto& v: mAdditionalEnv)
+    {
+        if (name == v.substr(0, v.find("=")))
+        {
+            v = newAdditionalEnvValue;
+        }
+    }
     mAdditionalEnv.push_back(newAdditionalEnvValue);
 }
 

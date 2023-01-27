@@ -409,7 +409,6 @@ int Supervisor::listProcesses(std::shared_ptr<Process>& process)
 */
 int Supervisor::loadConfig(const string & config_path, bool override_existing)
 {
-    IGNORE(mInitialEnvironment);
     YAML::Node config;
     try {
         config = YAML::LoadFile(config_path);
@@ -522,26 +521,32 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
         {
             mProcessMap[new_process->getProcessName()] = new_process;
         }
-
+    
+        // environment variables
         auto env_vars = it->second["additional_env"];
-        if (env_vars)
+        if (!env_vars)
         {
-            for (auto i : env_vars)
+            ;
+        }
+        char** env_ptr = mInitialEnvironment;
+        while (*env_ptr)
+        {
+            new_process->addAdditionalEnvValue(*env_ptr);
+            env_ptr++;
+        }
+        for (auto i : env_vars)
+        {
+            if (i.Type() != YAML::NodeType::Map)
             {
-                if (i.Type() == YAML::NodeType::Map)
-                {
-                    std::cout << "map: " << i.Type() << "\n" << i << "\n";
-                    std::cout << "value_map: " << i.as<std::map<string, string>>().begin()->first.c_str() << "\n"; // :^)
-                                                                                                                   //
-                    auto value_map = i.as<std::map<string, string> >();
-                    for (auto & v : value_map)
-                    {
-                        new_process->addAdditionalEnvValue(v.first + "=" + v.second);
-                    }
-
-                }
+                break;
+            }
+            auto value_map = i.as<std::map<string, string> >();
+            for (auto & v : value_map)
+            {
+                new_process->addAdditionalEnvValue(v.first + "=" + v.second);
             }
         }
+
 
         if (restart)
         {
