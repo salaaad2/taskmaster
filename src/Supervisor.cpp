@@ -97,7 +97,6 @@ Supervisor::Supervisor(
 Supervisor::~Supervisor()
 {
     // make sure to stop all started programs if we exit the interpreter
-    Utils::LogStatus(mLogFile, "~Supervisor\n");
     this->exit(mProcessMap[""]);
     Utils::LogStatus(mLogFile, "Exiting taskmaster...\n");
     for (auto p : mProcessMap)
@@ -182,7 +181,7 @@ int Supervisor::startProcess(std::shared_ptr<Process> & process)
 }
 
 /*
-**
+** start and/or restart processes
 */
 int Supervisor::_start(std::shared_ptr<Process> & process)
 {
@@ -190,7 +189,9 @@ int Supervisor::_start(std::shared_ptr<Process> & process)
         process->getNumberOfRestarts() :
         1;
 
-    for (auto i = 0; i < number_of_restarts; ++i)
+    // restart n times if 
+    auto i = 0;
+    while (i < number_of_restarts)
     {
         process->start();
         if (!process->isAlive())
@@ -199,6 +200,7 @@ int Supervisor::_start(std::shared_ptr<Process> & process)
                 mLogFile,
                 process->getProcessName(),
                 "Did not start. strerror: " + process->getStrerror());
+            ++i;
             continue;
         }
         // the process managed to start, monitor it until it ends
@@ -206,17 +208,28 @@ int Supervisor::_start(std::shared_ptr<Process> & process)
         switch (process->getShouldRestart())
         {
         case ShouldRestart::Never:
-            return 0;
+            { return 0; }
         case ShouldRestart::UnexpectedExit:
             if (ret != 0)
             {
-                continue;}
-            else 
-            {
-                return 0;}
+                // restart if there was an error
+                ++i;
+                continue;
+            }
+            break;
         case ShouldRestart::Always:
-            i = 0;
-            continue;
+            {
+                // infinite loop
+                i = 0;
+                continue;
+            }
+        default:
+            {
+                Utils::LogError(
+                    mLogFile,
+                    process->getProcessName(),
+                    "Invalid should_restart value provided. Exiting.");
+            }
         }
         return 0;
     }
@@ -240,7 +253,7 @@ int Supervisor::_monitor(std::shared_ptr<Process>& process)
         Utils::LogStatus(
             mLogFile,
             "Process " + process->getProcessName() +
-            " killed by signal: " + std::to_string(WTERMSIG(ret)));
+            " killed by signal: " + std::to_string(WTERMSIG(ret)) + "\n");
     }
 
     // if a start_time was set in config, we need to make sure that we did not return 
@@ -351,7 +364,6 @@ int Supervisor::exit(std::shared_ptr<Process>& process)
 {
     IGNORE(process);
 
-    std::cout << "exit()\n";
     std::cout.flush();
     int n = killAllProcesses(false);
     Utils::LogStatus(mLogFile, "Killed: " + std::to_string(n) + " processe(s);\n");

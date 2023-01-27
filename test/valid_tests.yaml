@@ -67,3 +67,4 @@ supervisor-processes:
     should_restart: 1
     number_of_restarts: 1
     exec_on_startup: true
+    umask: 044

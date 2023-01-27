@@ -26,7 +26,7 @@ supervisor-processes:
   test_restart_time_elapsed:
     name: "restart-time-elapsed"
     full_path: "./test/sleep_for_two.sh"
-    start_time: 5.0
+    start_time: 3.0
     start_command: []
     expected_return: 0
     redirect_streams: false
@@ -43,6 +43,18 @@ supervisor-processes:
     expected_return: 0
     redirect_streams: false
     output_redirect_path: ""
-    should_restart: 2
-    number_of_restarts: 3
+    should_restart: 2 # 2 means always
+    number_of_restarts: 1
+    exec_on_startup: true
+  start_five:
+    name: "start-five"
+    full_path: "./test/sleep_for_two.sh"
+    start_time: 1.5
+    start_command: []
+    expected_return: 0
+    redirect_streams: false
+    output_redirect_path: ""
+    should_restart: 2 # 2 means always
+    number_of_restarts: 1
+    number_of_processes: 5
     exec_on_startup: true

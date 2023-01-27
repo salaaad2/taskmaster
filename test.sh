@@ -31,8 +31,12 @@ do
 done
 
 # make sure the umask was applied to the target and to the target only
-umask_permission_string=$(stat test/ls_invalid_umask_file | cut -d ' ' -f 3)
-original_permission_string=$(stat test/cat_file | cut -d ' ' -f 3)
+# bsd stat
+#umask_permission_string=$(stat test/ls_invalid_umask_file | cut -d ' ' -f 3)
+#original_permission_string=$(stat test/cat_file | cut -d ' ' -f 3)
+# gnu stat
+umask_permission_string=$(stat -c '%A' test/ls_invalid_umask_file)
+original_permission_string=$(stat -c '%A' test/cat_file)
 
 if echo $umask_permission_string | grep -q '\-rw\-\-\-\-\-\-\-'; then
     echo -e "\033[32m PASS:  umask permissions: umask(044)"

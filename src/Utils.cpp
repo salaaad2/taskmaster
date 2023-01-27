@@ -45,7 +45,7 @@ void LogStatus(
     const string & custom)
 {
     write_mutex.lock();
-    stream << custom;
+    stream << "[" << std::to_string(std::time(nullptr)) << "] " << custom;
     stream.flush();
     write_mutex.unlock();
 }

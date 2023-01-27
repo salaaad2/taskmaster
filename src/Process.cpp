@@ -99,7 +99,7 @@ int Process::start()
         ::close(pipe_fds[1]);
         if (count)
         {
-            setStrerror(strerror(err));
+            setStrerror(std::strerror(err));
             setIsAlive(false);
             return -1;
         }
