@@ -67,8 +67,8 @@ supervisor-processes:
     expected_return:
       - 0
       - 1
-    redirect_streams: false
-    output_redirect_path: ""
+    redirect_streams: true
+    output_redirect_path: "./test/multiple_return_noenv_file"
     should_restart: 1 # 2 means always
     number_of_restarts: 1
     exec_on_startup: true
@@ -79,8 +79,11 @@ supervisor-processes:
     expected_return:
       - 0
       - 1
-    redirect_streams: false
-    output_redirect_path: ""
+    redirect_streams: true
+    output_redirect_path: "./test/multiple_return_env_file"
     should_restart: 1 # 2 means always
     number_of_restarts: 1
     exec_on_startup: true
+    additional_env:
+      - COOL_ENV_VAR: "value"
+      - STARTED_BY: "coolman"

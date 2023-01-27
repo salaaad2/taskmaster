@@ -32,9 +32,9 @@ public:
             const string &fullPath,
             const string &processName,
             const string &workingDir,
-            const string &additionalEnv,
             const string &outputRedirectPath,
-            const std::vector<string> &commandArgs);
+            const std::vector<string> &commandArgs,
+            const std::vector<string> &additionalEnv);
         ~Process();
 
         /*
@@ -81,12 +81,12 @@ public:
         void setProcessName(const string &newProcessName);
         const string &getWorkingDir() const;
         void setWorkingDir(const string &newWorkingDir);
-        const string &getAdditionalEnv() const;
-        void setAdditionalEnv(const string &newAdditionalEnv);
         const string &getOutputRedirectPath() const;
         void setOutputRedirectPath(const string &newOutputRedirectPath);
         const std::vector<string> &getCommandArguments() const;
         void appendCommandArgument(const string &newStartCommand);
+        const std::vector<string> &getAdditionalEnv() const;
+        void addAdditionalEnvValue(const string &newAdditionalEnv);
 private:
         /*
         ** private functions
@@ -112,9 +112,9 @@ private:
         string mFullPath;
         string mProcessName;
         string mWorkingDir;
-        string mAdditionalEnv;
         string mOutputStreamRedirectPath;
         std::vector<string> mCommandArguments;
+        std::vector<string> mAdditionalEnv;
 };
 
 std::ostream & operator<<(std::ostream & s, const Process & src);

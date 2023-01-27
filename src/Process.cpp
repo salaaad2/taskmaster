@@ -81,6 +81,9 @@ int Process::start()
 
         std::vector<const char*> arg_v =
             Utils::ContainerToConstChar(mProcessName, getCommandArguments());
+
+        std::vector<const char*> env_v =
+            Utils::ContainerToConstChar("", getAdditionalEnv());
         int exec_return =
             ::execv(mFullPath.c_str(), const_cast<char*const*>(arg_v.data()));
         // execv error: write errno to the pipe opened in the parent process
@@ -160,9 +163,9 @@ Process::Process() :
     mFullPath(""),
     mProcessName(""),
     mWorkingDir(""),
-    mAdditionalEnv(""),
     mOutputStreamRedirectPath(""),
-    mCommandArguments(std::vector<string>())
+    mCommandArguments(std::vector<string>()),
+    mAdditionalEnv(std::vector<string>())
 {}
 
 Process::Process(const Process & process)
@@ -201,9 +204,9 @@ Process::Process(
         const string &fullPath,
         const string &name,
         const string &workingDir,
-        const string &additionalEnv,
         const string &outputRedirectPath,
-        const std::vector<string> &commandArgs) :
+        const std::vector<string> &commandArgs,
+        const std::vector<string> &additionalEnv) :
     mIsAlive(isAlive),
     mExecOnStartup(execOnStartup),
     mRedirectStreams(hasStandardStreams),
@@ -220,9 +223,9 @@ Process::Process(
     mFullPath(fullPath),
     mProcessName(name),
     mWorkingDir(workingDir),
-    mAdditionalEnv(additionalEnv),
     mOutputStreamRedirectPath(outputRedirectPath),
-    mCommandArguments(commandArgs)
+    mCommandArguments(commandArgs),
+    mAdditionalEnv(additionalEnv)
 {}
 
 Process::~Process() {}
@@ -407,14 +410,14 @@ void Process::setWorkingDir(const string &newWorkingDir)
     mWorkingDir = newWorkingDir;
 }
 
-const string &Process::getAdditionalEnv() const
+const std::vector<string> &Process::getAdditionalEnv() const
 {
     return mAdditionalEnv;
 }
 
-void Process::setAdditionalEnv(const string &newAdditionalEnv)
+void Process::addAdditionalEnvValue(const string &newAdditionalEnvValue)
 {
-    mAdditionalEnv = newAdditionalEnv;
+    mAdditionalEnv.push_back(newAdditionalEnvValue);
 }
 
 const string &Process::getOutputRedirectPath() const

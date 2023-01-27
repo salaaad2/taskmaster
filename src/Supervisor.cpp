@@ -452,7 +452,8 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
         {Utils::LogError(mLogFile, "full_path", "does not exist or is invalid"); continue;}
         else if (override_existing && value_changed)
         {Utils::LogStatus(mLogFile, "restarting process"); restart = true;}
-    
+        
+        // 
         auto expected_return_node = it->second["expected_return"];
         switch(expected_return_node.Type())
         {
@@ -468,7 +469,7 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
             default:
                 break;
         }
-        // new_process->setExpectedReturn(GetYAMLNode<int>(it, "expected_return", old_process->getExpectedReturn(), &is_node_valid, &value_changed));
+
         if (!is_node_valid)
         {Utils::LogError(mLogFile, "expected_return", "does not exist or is invalid"); continue;}
         else if (override_existing && value_changed)
@@ -509,18 +510,37 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
             auto initial_name = new_process->getProcessName();
             mProcessMap[new_process->getProcessName()] = new_process;
 
-            for (int i = 0; i < n_processes; ++i)
+            for (int i = 1; i <= n_processes; ++i)
             {
                 auto name = GetUniqueName(initial_name, i);
                 auto copy_process = std::make_shared<Process>(Process(*new_process.get()));
                 copy_process->setProcessName(name);
-
                 mProcessMap[name] = copy_process;
             }
         }
         else
         {
             mProcessMap[new_process->getProcessName()] = new_process;
+        }
+
+        auto env_vars = it->second["additional_env"];
+        if (env_vars)
+        {
+            for (auto i : env_vars)
+            {
+                if (i.Type() == YAML::NodeType::Map)
+                {
+                    std::cout << "map: " << i.Type() << "\n" << i << "\n";
+                    std::cout << "value_map: " << i.as<std::map<string, string>>().begin()->first.c_str() << "\n"; // :^)
+                                                                                                                   //
+                    auto value_map = i.as<std::map<string, string> >();
+                    for (auto & v : value_map)
+                    {
+                        new_process->addAdditionalEnvValue(v.first + "=" + v.second);
+                    }
+
+                }
+            }
         }
 
         if (restart)

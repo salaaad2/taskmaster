@@ -40,8 +40,11 @@ namespace Utils {
             const T & source)
     {
         std::vector<const char*> out;
-
-        out.push_back(name.c_str());
+    
+        if (!name.empty())
+        {
+            out.push_back(name.c_str());
+        }
         for (auto it = source.begin(); it != source.end(); ++it)
         {
             out.push_back((*it).c_str());
