@@ -8,11 +8,11 @@ use GetYAMLValues( is_modified )
 sanity check:
 - process not killed behaviour
 - How long to wait after a graceful stop before killing the program
-## additional/different env values
-single function call ? execv() -> execve() + add new values to envp arg
-## multiple acceptable return values
 
 # In Progress
+## multiple acceptable return values
+## additional/different env values
+single function call ? execv() -> execve() + add new values to envp arg
 
 # Done
 ###  How long the program should be running after it’s started for it to be considered successfully started"

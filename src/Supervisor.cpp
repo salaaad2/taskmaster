@@ -267,13 +267,13 @@ int Supervisor::_monitor(std::shared_ptr<Process>& process)
             "Returned too early.");
         has_error = true;
     }
-    if (process->getReturnValue() != process->getExpectedReturn())
+    if (!process->isExpectedReturnValue(process->getReturnValue()))
     {
         Utils::LogError(
             mLogFile,
             process->getProcessName(),
             "Unexpected return value: " + std::to_string(process->getReturnValue()) +
-            " expected: " + std::to_string(process->getExpectedReturn()));
+            " expected: " + std::to_string(process->getExpectedReturnValues().front()));
         has_error = true;
     }
     if (!has_error)
@@ -452,8 +452,23 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
         {Utils::LogError(mLogFile, "full_path", "does not exist or is invalid"); continue;}
         else if (override_existing && value_changed)
         {Utils::LogStatus(mLogFile, "restarting process"); restart = true;}
-
-        new_process->setExpectedReturn(GetYAMLNode<int>(it, "expected_return", old_process->getExpectedReturn(), &is_node_valid, &value_changed));
+    
+        auto expected_return_node = it->second["expected_return"];
+        switch(expected_return_node.Type())
+        {
+            case YAML::NodeType::Scalar:
+                new_process->addExpectedReturn(expected_return_node.as<int>());
+                break;
+            case YAML::NodeType::Sequence:
+                for (auto item : expected_return_node)
+                {
+                    new_process->addExpectedReturn(item.as<int>());
+                }
+                break;
+            default:
+                break;
+        }
+        // new_process->setExpectedReturn(GetYAMLNode<int>(it, "expected_return", old_process->getExpectedReturn(), &is_node_valid, &value_changed));
         if (!is_node_valid)
         {Utils::LogError(mLogFile, "expected_return", "does not exist or is invalid"); continue;}
         else if (override_existing && value_changed)

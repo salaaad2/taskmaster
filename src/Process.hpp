@@ -22,7 +22,7 @@ public:
             bool isAlive,
             bool execOnStartup,
             bool hasStandardStreams,
-            int expectedReturn,
+            std::vector<int> expectedReturn,
             int returnValue,
             int numberOfRestarts,
             int numberOfProcesses,
@@ -54,8 +54,9 @@ public:
         void setRedirectStreams(bool newHasStandardStreams);
         int  getReturnValue() const;
         void setReturnValue(int newReturnValue);
-        int  getExpectedReturn() const;
-        void setExpectedReturn(int newExpectedReturn);
+        bool isExpectedReturnValue(int ret_val) const;
+        std::vector<int> getExpectedReturnValues() const;
+        void addExpectedReturn(int newExpectedReturn);
         int  getNumberOfRestarts() const;
         void setNumberOfRestarts(int newNumberOfRestarts);
         int  getNumberOfProcesses() const;
@@ -97,7 +98,7 @@ private:
         bool mIsAlive;
         bool mExecOnStartup;
         bool mRedirectStreams;
-        int mExpectedReturn;
+        std::vector<int> mExpectedReturnValues;
         int mReturnValue;
         int mNumberOfRestarts;
         int mNumberOfProcesses;

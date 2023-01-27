@@ -58,3 +58,29 @@ supervisor-processes:
     number_of_restarts: 1
     number_of_processes: 5
     exec_on_startup: true
+  # with two possible return values, 
+  #  demonstrate that the environment variables apply
+  multiple_return_env:
+    name: "multiple-return-1"
+    full_path: "./test/ret_env.sh"
+    start_command: []
+    expected_return:
+      - 0
+      - 1
+    redirect_streams: false
+    output_redirect_path: ""
+    should_restart: 1 # 2 means always
+    number_of_restarts: 1
+    exec_on_startup: true
+  multiple_return_env:
+    name: "multiple-return-2"
+    full_path: "./test/ret_env.sh"
+    start_command: []
+    expected_return:
+      - 0
+      - 1
+    redirect_streams: false
+    output_redirect_path: ""
+    should_restart: 1 # 2 means always
+    number_of_restarts: 1
+    exec_on_startup: true

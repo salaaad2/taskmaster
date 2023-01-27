@@ -148,7 +148,7 @@ Process::Process() :
     mIsAlive(false),
     mExecOnStartup(false),
     mRedirectStreams(true),
-    mExpectedReturn(0),
+    mExpectedReturnValues(std::vector<int>()),
     mReturnValue(-1),
     mNumberOfRestarts(0),
     mPid(0),
@@ -170,7 +170,7 @@ Process::Process(const Process & process)
     mIsAlive = process.mIsAlive;
     mExecOnStartup = process.mExecOnStartup;
     mRedirectStreams = process.mRedirectStreams;
-    mExpectedReturn = process.mExpectedReturn;
+    mExpectedReturnValues = process.mExpectedReturnValues;
     mReturnValue = 0;
     mNumberOfRestarts = process.mNumberOfRestarts;
     mPid = process.mPid;
@@ -191,7 +191,7 @@ Process::Process(
         bool isAlive,
         bool execOnStartup,
         bool hasStandardStreams,
-        int expectedReturn,
+        std::vector<int> expectedReturnValues,
         int returnValue,
         int numberOfRestarts,
         int numberOfProcesses,
@@ -207,7 +207,7 @@ Process::Process(
     mIsAlive(isAlive),
     mExecOnStartup(execOnStartup),
     mRedirectStreams(hasStandardStreams),
-    mExpectedReturn(expectedReturn),
+    mExpectedReturnValues(expectedReturnValues),
     mReturnValue(returnValue),
     mNumberOfRestarts(numberOfRestarts),
     mNumberOfProcesses(numberOfProcesses),
@@ -267,14 +267,24 @@ void Process::setRedirectStreams(bool newHasStandardStreams)
     mRedirectStreams = newHasStandardStreams;
 }
 
-int Process::getExpectedReturn() const
+bool Process::isExpectedReturnValue(int ret_val) const
 {
-    return mExpectedReturn;
+    for (auto & r: mExpectedReturnValues)
+    {
+        if (r == ret_val)
+            return true;
+    }
+    return false;
 }
 
-void Process::setExpectedReturn(int newExpectedReturn)
+std::vector<int> Process::getExpectedReturnValues() const
 {
-    mExpectedReturn = newExpectedReturn;
+    return mExpectedReturnValues;
+}
+
+void Process::addExpectedReturn(int newExpectedReturn)
+{
+    mExpectedReturnValues.push_back(newExpectedReturn);
 }
 
 int Process::getReturnValue() const
