@@ -60,7 +60,6 @@ class Supervisor {
         string mLogFilePath;
         char ** mInitialEnvironment;
         std::fstream mLogFile;
-        std::vector<string> mCommandHistory;
         std::unordered_map<string, std::shared_ptr<Process> > mProcessMap;
         std::unordered_map<string, std::function<int(std::shared_ptr<Process>&)> > mCommandMap;
 };

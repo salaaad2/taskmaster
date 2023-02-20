@@ -14,6 +14,8 @@
 #include <unistd.h>
 #include <yaml-cpp/yaml.h>
 #include <ctime>
+#include <readline/readline.h>
+#include <readline/history.h>
 
 using namespace std::chrono_literals;
 
@@ -141,12 +143,17 @@ void Supervisor::init()
     mCommandMap["list"]    = std::bind(&Supervisor::listProcesses, this, std::placeholders::_1);
 
     // start REPL
-    std::cout << "taskmasterctl>$ ";
-    for (string line;
-         std::getline(std::cin, line);
-         std::cout << "taskmasterctl>$ ")
+    for (;;)
     {
-        std::cout << line << "\n";
+        bool found_command = false;
+        char* input = ::readline("taskmasterctl>$ ");
+        string line;
+        if (!input)
+        {
+            return ;
+        }
+        line = input;
+        add_history(input);
         auto split_command = Utils::SplitString(line, " ");
         if (split_command.size() == 0)
         {
@@ -164,13 +171,21 @@ void Supervisor::init()
                     split_command.front() == "exit" ||
                     split_command.front() == "history") {
                     mCommandMap[(*it).first](mProcessMap[split_command.back()]);
-                    mCommandHistory.push_back(line);
+                    found_command = true;
                     if (split_command.front() == "exit")
                     {
                         return ;
                     }
                 }
             }
+        }
+        if (!found_command)
+        {
+            std::cout << "Command not found: " << line << "\n";
+        }
+        if (input)
+        {
+            free(input);
         }
     }
 }
@@ -383,8 +398,14 @@ int Supervisor::history(std::shared_ptr<Process>& process)
     string out =
         "==== taskmaster command history ====\n";
 
-    if (!mCommandHistory.empty())
-        out += Utils::JoinStrings(mCommandHistory, "\n");
+    HIST_ENTRY** history_entry_list = history_list();
+    if (history_entry_list)
+    {
+        for (int i = 0; history_entry_list[i] != nullptr; i++)
+        {
+            out += string(history_entry_list[i]->line);
+        }
+    }
     std::cout << out;
     return 0;
 }
@@ -510,9 +531,13 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
 
         is_node_valid = false;
         new_process->setKillSignal(GetYAMLNode<int>(it, "kill_signal", 0, &is_node_valid, &value_changed, SIGTERM));
+
         auto umask = GetYAMLNode<int>(it, "umask", 0, &is_node_valid, &value_changed);
         if (is_node_valid)
         {new_process->setUmask(umask);}
+
+        is_node_valid = false;
+        new_process->setForceQuitWaitTime(GetYAMLNode<double>(it, "force_quit_wait_time", 0, &is_node_valid, &value_changed, 0.0));
 
         auto start_command = it->second["start_command"];
         for (auto c : start_command)

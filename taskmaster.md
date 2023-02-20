@@ -1,13 +1,9 @@
 #+TITLE: Taskmaster
 
 # TODO:
-## readline-cpp
-## killsig
-sanity check:
-- process not killed behaviour
-- How long to wait after a graceful stop before killing the program
 
 # In Progress
+## readline-cpp
 
 # Done
 ###  How long the program should be running after it’s started for it to be considered successfully started"
@@ -26,3 +22,4 @@ sanity check:
 ###  additional/different env values single function call ? execv() -> execve() + add new values to envp arg
 ###  multiple acceptable return values
 ## hot reload: use GetYAMLValues( is_modified )
+## killsig sanity check: - process not killed behaviour - How long to wait after a graceful stop before killing the program
