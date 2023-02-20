@@ -288,9 +288,12 @@ std::vector<int> Process::getExpectedReturnValues() const
     return mExpectedReturnValues;
 }
 
-void Process::addExpectedReturn(int newExpectedReturn)
+bool Process::setExpectedReturns(const std::vector<int>& newExpectedReturn)
 {
-    mExpectedReturnValues.push_back(newExpectedReturn);
+    if (newExpectedReturn == mExpectedReturnValues)
+        return false;
+    mExpectedReturnValues = newExpectedReturn;
+    return true;
 }
 
 int Process::getReturnValue() const

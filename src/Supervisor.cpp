@@ -139,7 +139,6 @@ void Supervisor::init()
     mCommandMap["list"]    = std::bind(&Supervisor::listProcesses, this, std::placeholders::_1);
 
     // start REPL
-    string line;
     std::cout << "taskmasterctl>$ ";
     for (string line;
          std::getline(std::cin, line);
@@ -164,6 +163,10 @@ void Supervisor::init()
                     split_command.front() == "history") {
                     mCommandMap[(*it).first](mProcessMap[split_command.back()]);
                     mCommandHistory.push_back(line);
+                    if (split_command.front() == "exit")
+                    {
+                        return ;
+                    }
                 }
             }
         }
@@ -425,11 +428,12 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
         Utils::LogError(mLogFile, config_path, "supervisor-processes node not found.");
         return (1);
     }
-    bool is_node_valid = false;
-    bool value_changed = false;
-    bool restart = false;
     for (auto it = processes_node.begin(); it != processes_node.end(); ++it)
     {
+        bool is_node_valid = false;
+        bool value_changed = false;
+        bool restart = false;
+
         std::shared_ptr<Process> new_process = std::make_shared<Process>(Process());
         new_process->setProcessName(GetYAMLNode<string>(it, "name", &is_node_valid));
         if (!is_node_valid) {Utils::LogError(mLogFile, "name", "does not exist or is invalid"); continue;}
@@ -440,6 +444,7 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
             Utils::LogError(mLogFile, new_process->getProcessName(), "already exists in process list.");
             continue;
         }
+        // get pointer to the existing process if it exists and we want to restart
         auto old_process = (old_process_it == mProcessMap.end()) ?
             new_process :
             old_process_it->second;
@@ -450,20 +455,29 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
         if (!is_node_valid)
         {Utils::LogError(mLogFile, "full_path", "does not exist or is invalid"); continue;}
         else if (override_existing && value_changed)
-        {Utils::LogStatus(mLogFile, "restarting process"); restart = true;}
+        {Utils::LogStatus(mLogFile, "restarting process\n"); restart = true;}
+        value_changed = false;
         
         // 
         auto expected_return_node = it->second["expected_return"];
+        if (!expected_return_node)
+        {
+            Utils::LogError(mLogFile, new_process->getProcessName(), "Invalid return value set.");
+            continue;
+        }
+        std::vector<int> return_values;
         switch(expected_return_node.Type())
         {
             case YAML::NodeType::Scalar:
-                new_process->addExpectedReturn(expected_return_node.as<int>());
+                return_values.push_back(expected_return_node.as<int>());
+                value_changed = new_process->setExpectedReturns(return_values);
                 break;
             case YAML::NodeType::Sequence:
                 for (auto item : expected_return_node)
                 {
-                    new_process->addExpectedReturn(item.as<int>());
+                    return_values.push_back(item.as<int>());
                 }
+                value_changed = new_process->setExpectedReturns(return_values);
                 break;
             default:
                 break;
@@ -472,13 +486,15 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
         if (!is_node_valid)
         {Utils::LogError(mLogFile, "expected_return", "does not exist or is invalid"); continue;}
         else if (override_existing && value_changed)
-        {Utils::LogStatus(mLogFile, "restarting process"); restart = true;}
+        {Utils::LogStatus(mLogFile, "restarting process\n"); restart = true;}
+        value_changed = false;
 
         new_process->setNumberOfRestarts(GetYAMLNode<int>(it, "number_of_restarts", old_process->getNumberOfRestarts(), &is_node_valid, &value_changed));
         if (!is_node_valid)
         {new_process->setNumberOfRestarts(1);}
         else if (override_existing && value_changed)
-        {Utils::LogStatus(mLogFile, "restarting process"); restart = true;}
+        {Utils::LogStatus(mLogFile, "restarting process\n"); restart = true;}
+        value_changed = false;
 
         new_process->setStartTime(GetYAMLNode<double>(it, "start_time", &is_node_valid));
         new_process->setRedirectStreams(GetYAMLNode<bool>(it, "redirect_streams", &is_node_valid));
@@ -488,8 +504,8 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
         // see Process.hpp for possible values and usage
         new_process->setShouldRestart(GetYAMLNode<int>(it, "should_restart", &is_node_valid));
 
-        new_process->setKillSignal(GetYAMLNode<int>(it, "kill_signal", 0, &is_node_valid, &value_changed, SIGTERM));
         is_node_valid = false;
+        new_process->setKillSignal(GetYAMLNode<int>(it, "kill_signal", 0, &is_node_valid, &value_changed, SIGTERM));
         auto umask = GetYAMLNode<int>(it, "umask", 0, &is_node_valid, &value_changed);
         if (is_node_valid)
         {new_process->setUmask(umask);}
@@ -551,7 +567,7 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
         if (restart)
         {
             new_process->stop();
-            new_process->start();
+            _start(new_process);
         }
         restart = false;
     }
