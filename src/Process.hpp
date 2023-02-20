@@ -27,6 +27,7 @@ public:
             int numberOfRestarts,
             int numberOfProcesses,
             int killSignal,
+            double forceQuitWaitTime,
             int umask,
             ShouldRestart shouldRestart,
             const string &fullPath,
@@ -40,8 +41,9 @@ public:
         /*
         ** business logic
         */
-        int start() ;
-        int stop() ;
+        int start();
+        int stop();
+        int kill();
 
         /*
         ** get/setters
@@ -65,6 +67,8 @@ public:
         void setPid(int newPid);
         int  getKillSignal() const;
         void setKillSignal(int killSignal);
+        double getForceQuitWaitTime() const;
+        void setForceQuitWaitTime(double forceQuitWaitTime);
         int  getUmask() const;
         void setUmask(int umask);
         ShouldRestart getShouldRestart() const;
@@ -104,6 +108,7 @@ private:
         int mNumberOfProcesses;
         int mPid;
         int mKillSignal;
+        double mForceQuitWaitTime;
         int mUmask;
         ShouldRestart mShouldRestart;
         long double mStartTime;

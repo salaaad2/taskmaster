@@ -15,6 +15,8 @@
 #include <yaml-cpp/yaml.h>
 #include <ctime>
 
+using namespace std::chrono_literals;
+
 // anonymous namespace
 namespace {
 std::function<void(int)> sighup_handler;
@@ -30,7 +32,7 @@ void SignalLambdaWrapper(int signal)
 */
 template <typename T>
 [[nodiscard]]
-T GetYAMLNode(
+static T GetYAMLNode(
     const YAML::iterator &node,
     const string &node_name,
     const T& initial_value,
@@ -57,7 +59,7 @@ T GetYAMLNode(
 */
 template <typename T>
 [[nodiscard]]
-T GetYAMLNode(
+static T GetYAMLNode(
     const YAML::iterator &node,
     const string &node_name,
     bool *is_node_valid)
@@ -67,7 +69,7 @@ T GetYAMLNode(
     return (GetYAMLNode(node, node_name, useless_T, is_node_valid, &useless_bool));
 }
 
-string GetUniqueName(const string & base_name, int number)
+static string GetUniqueName(const string & base_name, int number)
 {
     return base_name + "_" + std::to_string(number);
 }
@@ -309,7 +311,9 @@ int Supervisor::stopProcess(std::shared_ptr<Process> & process)
     {
         // should we wait and force kill ?
         Utils::LogError(mLogFile, process->getProcessName(), 
-            "kill(" + std::to_string(process->getKillSignal()) + ") did not return as expected.");
+            "kill(" + std::to_string(process->getKillSignal()) + ") did not return as expected. Force quitting (using SIGKILL).");
+        std::this_thread::sleep_for(std::chrono::duration<double>(process->getForceQuitWaitTime()));
+        process->kill();
     }
     else
     {

@@ -127,11 +127,25 @@ int Process::stop()
     }
     else
     {
-        ret = kill(mPid, mKillSignal);
+        ret = ::kill(mPid, mKillSignal);
         setIsAlive(ret == 0);
         return (ret == 0) ? 0 : 1;
     }
     return ret;
+}
+
+int Process::kill()
+{
+    if (!isAlive())
+    {
+        return -1;
+    }
+    else
+    {
+        ::kill(mPid, SIGKILL);
+        setIsAlive(false);
+    }
+    return 0;
 }
 
 std::ostream & operator<<(std::ostream & s, const Process & src)
@@ -159,6 +173,7 @@ Process::Process() :
     mNumberOfRestarts(0),
     mPid(0),
     mKillSignal(SIGTERM),
+    mForceQuitWaitTime(0.0),
     mUmask(-1),
     mShouldRestart(ShouldRestart::Never),
     mStartTime(0.00),
@@ -181,6 +196,7 @@ Process::Process(const Process & process)
     mNumberOfRestarts = process.mNumberOfRestarts;
     mPid = process.mPid;
     mKillSignal = process.mKillSignal;
+    mForceQuitWaitTime = process.mForceQuitWaitTime;
     mUmask = process.mUmask;
     mShouldRestart = process.mShouldRestart;
     mStartTime =  0.0;
@@ -202,6 +218,7 @@ Process::Process(
         int numberOfRestarts,
         int numberOfProcesses,
         int killSignal,
+        double forceQuitWaitTime,
         int umask,
         ShouldRestart shouldRestart,
         const string &fullPath,
@@ -219,6 +236,7 @@ Process::Process(
     mNumberOfProcesses(numberOfProcesses),
     mPid(0),
     mKillSignal(killSignal),
+    mForceQuitWaitTime(forceQuitWaitTime),
     mUmask(umask),
     mShouldRestart(shouldRestart),
     mStartTime(0.0),
@@ -344,6 +362,16 @@ int Process::getKillSignal() const
 void Process::setKillSignal(int newKillSignal)
 {
     mKillSignal = newKillSignal;
+}
+
+double Process::getForceQuitWaitTime() const
+{
+    return mForceQuitWaitTime;
+}
+
+void Process::setForceQuitWaitTime(double newForceQuitWaitTime)
+{
+    mForceQuitWaitTime = newForceQuitWaitTime;
 }
 
 int Process::getUmask() const
