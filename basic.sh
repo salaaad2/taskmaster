@@ -2,11 +2,11 @@
 rm valid.log
 rm taskmaster.log
 
-./taskmaster --log-file valid.log --config-file ./test/valid_tests.yaml 2>/dev/null
+./taskmaster --log-file basic.log --config-file ./test/basic_tests.yaml 2>/dev/null
 sleep 4
 
 # expected results
-valid_test_results=(
+basic_test_results=(
     "SUCCESS: cat"
     "SUCCESS: ls"
     "SUCCESS: sleep"
@@ -16,10 +16,10 @@ valid_test_results=(
 )
 
 # log
-file="valid.log"
+file="basic.log"
 
 # Iterate through array of strings
-for i in "${valid_test_results[@]}"
+for i in "${basic_test_results[@]}"
 do
     # Check if current string is present in file
     if grep -q "$i" $file; then

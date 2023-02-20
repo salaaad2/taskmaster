@@ -550,7 +550,6 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
 
         if (restart)
         {
-            //std::cout << *new_process.get();
             new_process->stop();
             new_process->start();
         }
