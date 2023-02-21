@@ -40,10 +40,9 @@ int Process::start()
     {return 1;}
     if (pid == 0)
     {
-        mode_t mask = 0;
-        if (getUmask() != -1)
+        mode_t mask = getUmask();
+        if ((int)mask != -1)
         {
-            mask = getUmask();
             ::umask(mask);
         }
 
@@ -81,7 +80,6 @@ int Process::start()
 
         std::vector<const char*> arg_v =
             Utils::ContainerToConstChar(mProcessName, getCommandArguments());
-
         std::vector<const char*> env_v =
             Utils::ContainerToConstChar("", getAdditionalEnv());
         int exec_return =
@@ -155,11 +153,12 @@ std::ostream & operator<<(std::ostream & s, const Process & src)
     {
         out = Utils::JoinStrings(src.getCommandArguments(), ", ");
     }
-    s << "[" << src.getProcessName() << "]\n"
-      << "Alive: " << ((src.isAlive()) ? "true PID: " + std::to_string(src.getPid()) : "false")
-      << "\nfull_path: " << src.getFullPath()
-      << "\nstart_command: [" << out << "]"
-      << "\nlog_to_file: " << ((src.getRedirectStreams()) ? "[" + src.getOutputRedirectPath() + "]" : "false")
+    s << "[" << src.getProcessName() << "]"
+      << "\n\trunning: " << ((src.isAlive()) ? "true, PID: " + std::to_string(src.getPid()) : "false")
+      << "\n\tfull_path: " << src.getFullPath()
+      << "\n\tstart_command: [" << out << "]"
+      << "\n\tlog_to_file: " << ((src.getRedirectStreams()) ? "[" + src.getOutputRedirectPath() + "]" : "false")
+      << "\n\tworking_dir: " << "\"" << src.getWorkingDir() << "\""
       << "\n";
     return s;
 }

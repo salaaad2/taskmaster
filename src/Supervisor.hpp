@@ -33,7 +33,7 @@ class Supervisor {
         ** private functions
         */
         int loadConfig(const string & config_path, bool override_existing = false);
-        int killAllProcesses(bool restart);
+        int killAllProcesses();
 
         int _start(std::shared_ptr<Process> & process);
         int _monitor(std::shared_ptr<Process> & process);

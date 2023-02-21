@@ -203,7 +203,7 @@ int Supervisor::startProcess(std::shared_ptr<Process> & process)
 /*
 ** start and/or restart processes
 */
-int Supervisor::_start(std::shared_ptr<Process> & process)
+void Supervisor::_start(std::shared_ptr<Process> & process)
 {
     int number_of_restarts = (process->getShouldRestart() != 0) ?
         process->getNumberOfRestarts() :
@@ -220,15 +220,16 @@ int Supervisor::_start(std::shared_ptr<Process> & process)
                 mLogFile,
                 process->getProcessName(),
                 "Did not start. strerror: " + process->getStrerror());
-            ++i;
-            continue;
         }
+
         // the process managed to start, monitor it until it ends
         int ret = _monitor(process);
         switch (process->getShouldRestart())
         {
         case ShouldRestart::Never:
-            { return 0; }
+            return ;
+        case ShouldRestart::Always:
+            continue;
         case ShouldRestart::UnexpectedExit:
             if (ret != 0)
             {
@@ -236,26 +237,19 @@ int Supervisor::_start(std::shared_ptr<Process> & process)
                 ++i;
                 continue;
             }
-            break;
-        case ShouldRestart::Always:
-            {
-                // infinite loop
-                i = 0;
-                continue;
-            }
+            return ;
         default:
-            {
-                Utils::LogError(
-                    mLogFile,
-                    process->getProcessName(),
-                    "Invalid should_restart value provided. Exiting.");
-            }
+            Utils::LogError(
+                mLogFile,
+                process->getProcessName(),
+                "Invalid should_restart value provided. Exiting.");
+            return ;
         }
-        return 0;
     }
-    return 0;
+    return ;
 }
 
+[[nodiscard]]
 int Supervisor::_monitor(std::shared_ptr<Process>& process)
 {
     int ret = 0;
@@ -313,6 +307,7 @@ int Supervisor::_monitor(std::shared_ptr<Process>& process)
     return has_error;
 }
 
+[[nodiscard]]
 int Supervisor::stopProcess(std::shared_ptr<Process> & process)
 {
     int stop_return_val = 0;
@@ -387,7 +382,7 @@ int Supervisor::exit(std::shared_ptr<Process>& process)
     IGNORE(process);
 
     std::cout.flush();
-    int n = killAllProcesses(false);
+    int n = killAllProcesses();
     Utils::LogStatus(mLogFile, "Killed: " + std::to_string(n) + " processe(s);\n");
     return 0;
 }
@@ -607,18 +602,14 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
 // 
 // kills all active processes, returns the number of killed
 //
-int Supervisor::killAllProcesses(bool restart)
+int Supervisor::killAllProcesses()
 {
-    if (restart)
-    {
-        return (0);
-    }
     int n = 0;
     for (auto & [key, process] : mProcessMap)
     {
         if (process.get() != nullptr && process->isAlive())
         {
-            process->stop();
+            process->kill();
             Utils::LogStatus(mLogFile, "killing " + key + "\n");
             n++;
         }
