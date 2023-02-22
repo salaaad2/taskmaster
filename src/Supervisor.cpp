@@ -450,21 +450,22 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
     }
     for (auto it = processes_node.begin(); it != processes_node.end(); ++it)
     {
+        // three cases for each option: 
+        // I:  fatal, go to the next node
+        // II: fatal, go to the next node
         bool is_node_valid = false;
         bool value_changed = false;
         bool restart = false;
-
         std::shared_ptr<Process> new_process = std::make_shared<Process>(Process());
+
         new_process->setProcessName(GetYAMLNode<string>(it, "name", &is_node_valid));
-        if (!is_node_valid) {Utils::LogError(mLogFile, "name", "does not exist or is invalid"); continue;}
+        if (!is_node_valid)
+        { Utils::LogError(mLogFile, "name", "does not exist or is invalid"); continue;}
 
         auto old_process_it = mProcessMap.find(new_process->getProcessName());
         if (old_process_it != mProcessMap.end() && !override_existing)
-        {
-            Utils::LogError(mLogFile, new_process->getProcessName(), "already exists in process list.");
-            continue;
-        }
-        // get pointer to the existing process if it exists and we want to restart
+        { Utils::LogError(mLogFile, new_process->getProcessName(), "already exists in process list."); continue; }
+        // get pointer to the existing process if it exists as we might want to restart it
         auto old_process = (old_process_it == mProcessMap.end()) ?
             new_process :
             old_process_it->second;
@@ -476,43 +477,37 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
         {Utils::LogStatus(mLogFile, "restarting process\n"); restart = true;}
         value_changed = false;
 
-        new_process->setWorkingDir(GetYAMLNode<string>(it, "working_directory", old_process->getWorkingDir(), &is_node_valid, &value_changed));
-
-        // 
-        auto expected_return_node = it->second["expected_return"];
-        if (!expected_return_node)
-        {
-            Utils::LogError(mLogFile, new_process->getProcessName(), "Invalid return value set.");
-            continue;
-        }
-        new_process->setExpectedReturns(old_process->getExpectedReturnValues());
-        std::vector<int> return_values;
-        switch(expected_return_node.Type())
-        {
-            case YAML::NodeType::Scalar:
-                return_values.push_back(expected_return_node.as<int>());
-                value_changed = new_process->setExpectedReturns(return_values);
-                break;
-            case YAML::NodeType::Sequence:
-                for (auto item : expected_return_node)
-                {
-                    return_values.push_back(item.as<int>());
-                }
-                value_changed = new_process->setExpectedReturns(return_values);
-                break;
-            default:
-                break;
-        }
-
+        new_process->setNumberOfRestarts(GetYAMLNode<int>(it, "number_of_restarts", old_process->getNumberOfRestarts(), &is_node_valid, &value_changed));
         if (!is_node_valid)
-        {Utils::LogError(mLogFile, "expected_return", "does not exist or is invalid"); continue;}
+        {new_process->setNumberOfRestarts(1);}
         else if (override_existing && value_changed)
         {Utils::LogStatus(mLogFile, "restarting process\n"); restart = true;}
         value_changed = false;
 
-        new_process->setNumberOfRestarts(GetYAMLNode<int>(it, "number_of_restarts", old_process->getNumberOfRestarts(), &is_node_valid, &value_changed));
+        auto expected_return_node = it->second["expected_return"];
+        if (!expected_return_node)
+        { Utils::LogError(mLogFile, new_process->getProcessName(), "Invalid return value set."); continue; }
+
+        new_process->setExpectedReturns(old_process->getExpectedReturnValues());
+        std::vector<int> return_values;
+        switch(expected_return_node.Type())
+        {
+        case YAML::NodeType::Scalar:
+            return_values.push_back(expected_return_node.as<int>());
+            value_changed = new_process->setExpectedReturns(return_values);
+            break;
+        case YAML::NodeType::Sequence:
+            for (auto item : expected_return_node)
+            {
+                return_values.push_back(item.as<int>());
+            }
+            value_changed = new_process->setExpectedReturns(return_values);
+            break;
+        default:
+            break;
+        }
         if (!is_node_valid)
-        {new_process->setNumberOfRestarts(1);}
+        {Utils::LogError(mLogFile, "expected_return", "does not exist or is invalid"); continue;}
         else if (override_existing && value_changed)
         {Utils::LogStatus(mLogFile, "restarting process\n"); restart = true;}
         value_changed = false;
@@ -521,25 +516,38 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
         new_process->setRedirectStreams(GetYAMLNode<bool>(it, "redirect_streams", &is_node_valid));
         new_process->setOutputRedirectPath(GetYAMLNode<string>(it, "output_redirect_path", &is_node_valid));
         new_process->setExecOnStartup(GetYAMLNode<bool>(it, "exec_on_startup", &is_node_valid));
-
         // see Process.hpp for possible values and usage
         new_process->setShouldRestart(GetYAMLNode<int>(it, "should_restart", &is_node_valid));
-
-        is_node_valid = false;
+        new_process->setWorkingDir(GetYAMLNode<string>(it, "working_directory", old_process->getWorkingDir(), &is_node_valid, &value_changed));
         new_process->setKillSignal(GetYAMLNode<int>(it, "kill_signal", 0, &is_node_valid, &value_changed, SIGTERM));
-
-        auto umask = GetYAMLNode<int>(it, "umask", 0, &is_node_valid, &value_changed);
-        if (is_node_valid)
-        {new_process->setUmask(umask);}
-
-        is_node_valid = false;
+        new_process->setUmask(GetYAMLNode<int>(it, "umask", 0, &is_node_valid, &value_changed, -1));
         new_process->setForceQuitWaitTime(GetYAMLNode<double>(it, "force_quit_wait_time", 0, &is_node_valid, &value_changed, 0.0));
+
         auto start_command = it->second["start_command"];
         for (auto c : start_command)
         {
             new_process->appendCommandArgument(c.as<string>());
         }
-        is_node_valid = true;
+        is_node_valid = false;
+
+        // environment variables
+        auto env_vars = it->second["additional_env"];
+        char** env_ptr = mInitialEnvironment;
+        while (*env_ptr)
+        {
+            new_process->addAdditionalEnvValue(*env_ptr);
+            env_ptr++;
+        }
+        for (auto i : env_vars)
+        {
+            if (i.Type() != YAML::NodeType::Map)
+                break; 
+            auto value_map = i.as<std::map<string, string> >();
+            for (auto & v : value_map)
+            {
+                new_process->addAdditionalEnvValue(v.first + "=" + v.second);
+            }
+        }
 
         // if we want to create multiple processes, create a new one using the copy constructor,
         //  give it a unique name and add it to mProcessMap
@@ -548,7 +556,6 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
         {
             auto initial_name = new_process->getProcessName();
             mProcessMap[new_process->getProcessName()] = new_process;
-
             for (int i = 1; i <= n_processes; ++i)
             {
                 auto name = GetUniqueName(initial_name, i);
@@ -561,35 +568,12 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
         {
             mProcessMap[new_process->getProcessName()] = new_process;
         }
-    
-        // environment variables
-        auto env_vars = it->second["additional_env"];
-        char** env_ptr = mInitialEnvironment;
-        while (*env_ptr)
-        {
-            new_process->addAdditionalEnvValue(*env_ptr);
-            env_ptr++;
-        }
-        for (auto i : env_vars)
-        {
-            if (i.Type() != YAML::NodeType::Map)
-            {
-                break;
-            }
-            auto value_map = i.as<std::map<string, string> >();
-            for (auto & v : value_map)
-            {
-                new_process->addAdditionalEnvValue(v.first + "=" + v.second);
-            }
-        }
-
 
         if (restart)
         {
             new_process->stop();
             _start(new_process);
         }
-        restart = false;
     }
     mIsConfigValid = (mProcessMap.size() > 0);
     return (0);
