@@ -398,7 +398,7 @@ int Supervisor::history(std::shared_ptr<Process>& process)
     {
         for (int i = 0; history_entry_list[i] != nullptr; i++)
         {
-            out += string(history_entry_list[i]->line);
+            out += string(history_entry_list[i]->line) + "\n";
         }
     }
     std::cout << out;
@@ -470,14 +470,14 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
             old_process_it->second;
 
         new_process->setFullPath(GetYAMLNode<string>(it, "full_path", old_process->getFullPath(), &is_node_valid, &value_changed));
-        new_process->setWorkingDir(GetYAMLNode<string>(it, "working_directory", old_process->getWorkingDir(), &is_node_valid, &value_changed));
-
         if (!is_node_valid)
         {Utils::LogError(mLogFile, "full_path", "does not exist or is invalid"); continue;}
         else if (override_existing && value_changed)
         {Utils::LogStatus(mLogFile, "restarting process\n"); restart = true;}
         value_changed = false;
-        
+
+        new_process->setWorkingDir(GetYAMLNode<string>(it, "working_directory", old_process->getWorkingDir(), &is_node_valid, &value_changed));
+
         // 
         auto expected_return_node = it->second["expected_return"];
         if (!expected_return_node)

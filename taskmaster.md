@@ -23,3 +23,5 @@
 ###  multiple acceptable return values
 ## hot reload: use GetYAMLValues( is_modified )
 ## killsig sanity check: - process not killed behaviour - How long to wait after a graceful stop before killing the program
+bug with hot reoad ls
+sighup
