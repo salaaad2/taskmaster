@@ -15,6 +15,7 @@
 #include <sys/wait.h>
 #include <signal.h>
 #include <ctime>
+#include <linux/limits.h>
 
 #include "Utils.hpp"
 
@@ -149,6 +150,13 @@ int Process::kill()
 std::ostream & operator<<(std::ostream & s, const Process & src)
 {
     string out;
+    string working_dir = src.getWorkingDir();
+    if (working_dir.empty())
+    {
+        char path[PATH_MAX];
+        getcwd(path, PATH_MAX);
+        working_dir = path;
+    }
     if (src.getCommandArguments().size() != 0)
     {
         out = Utils::JoinStrings(src.getCommandArguments(), ", ");
@@ -158,7 +166,7 @@ std::ostream & operator<<(std::ostream & s, const Process & src)
       << "\n\tfull_path: " << src.getFullPath()
       << "\n\tstart_command: [" << out << "]"
       << "\n\tlog_to_file: " << ((src.getRedirectStreams()) ? "[" + src.getOutputRedirectPath() + "]" : "false")
-      << "\n\tworking_dir: " << "\"" << src.getWorkingDir() << "\""
+      << "\n\tworking_dir: " << "\"" << working_dir << "\""
       << "\n";
     return s;
 }
@@ -300,16 +308,21 @@ bool Process::isExpectedReturnValue(int ret_val) const
     return false;
 }
 
-std::vector<int> Process::getExpectedReturnValues() const
+const std::vector<int>& Process::getExpectedReturnValues() const
 {
     return mExpectedReturnValues;
 }
 
+// sets expected return values to newExpectedReturn,
+// returns true if the value changed, false if not.
 bool Process::setExpectedReturns(const std::vector<int>& newExpectedReturn)
 {
     if (newExpectedReturn == mExpectedReturnValues)
         return false;
-    mExpectedReturnValues = newExpectedReturn;
+    for (int v : newExpectedReturn)
+    {
+        mExpectedReturnValues.push_back(v);
+    }
     return true;
 }
 

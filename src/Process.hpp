@@ -57,7 +57,7 @@ public:
         int  getReturnValue() const;
         void setReturnValue(int newReturnValue);
         bool isExpectedReturnValue(int ret_val) const;
-        std::vector<int> getExpectedReturnValues() const;
+        const std::vector<int>& getExpectedReturnValues() const;
         bool setExpectedReturns(const std::vector<int>& newExpectedReturn);
         int  getNumberOfRestarts() const;
         void setNumberOfRestarts(int newNumberOfRestarts);
