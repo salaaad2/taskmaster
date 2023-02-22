@@ -485,6 +485,7 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
             Utils::LogError(mLogFile, new_process->getProcessName(), "Invalid return value set.");
             continue;
         }
+        new_process->setExpectedReturns(old_process->getExpectedReturnValues());
         std::vector<int> return_values;
         switch(expected_return_node.Type())
         {
@@ -533,7 +534,6 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
 
         is_node_valid = false;
         new_process->setForceQuitWaitTime(GetYAMLNode<double>(it, "force_quit_wait_time", 0, &is_node_valid, &value_changed, 0.0));
-
         auto start_command = it->second["start_command"];
         for (auto c : start_command)
         {
@@ -564,10 +564,6 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
     
         // environment variables
         auto env_vars = it->second["additional_env"];
-        if (!env_vars)
-        {
-            ;
-        }
         char** env_ptr = mInitialEnvironment;
         while (*env_ptr)
         {
