@@ -21,6 +21,7 @@
 
 int Process::start()
 {
+    string cool;
     pid_t pid;
     int pipe_fds[2];
     int fork_pipes[2];
@@ -157,6 +158,11 @@ std::ostream & operator<<(std::ostream & s, const Process & src)
         getcwd(path, PATH_MAX);
         working_dir = path;
     }
+    string rets;
+    for (auto & ret: src.getExpectedReturnValues())
+    {
+        rets += std::to_string(ret);
+    }
     if (src.getCommandArguments().size() != 0)
     {
         out = Utils::JoinStrings(src.getCommandArguments(), ", ");
@@ -167,6 +173,7 @@ std::ostream & operator<<(std::ostream & s, const Process & src)
       << "\n\tstart_command: [" << out << "]"
       << "\n\tlog_to_file: " << ((src.getRedirectStreams()) ? "[" + src.getOutputRedirectPath() + "]" : "false")
       << "\n\tworking_dir: " << "\"" << working_dir << "\""
+      << "\n\tvalid return values: " << "[" << rets << "]"
       << "\n";
     return s;
 }
@@ -319,6 +326,7 @@ bool Process::setExpectedReturns(const std::vector<int>& newExpectedReturn)
 {
     if (newExpectedReturn == mExpectedReturnValues)
         return false;
+    mExpectedReturnValues.clear();
     for (int v : newExpectedReturn)
     {
         mExpectedReturnValues.push_back(v);
