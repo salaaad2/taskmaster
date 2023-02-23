@@ -226,10 +226,15 @@ void Supervisor::init()
 }
 
 /*
-** call _start in another thread and allow the user back into the REPL
+** call _start in another thread and allow the user back into the REPL.
+** return value is discarded.
 */
 int Supervisor::startProcess(std::shared_ptr<Process> & process)
 {
+    if (!process->isAlive())
+    {
+        return 0;
+    }
     std::thread start_thread(&Supervisor::_start, this, std::ref(process));
     start_thread.detach();
     return 0;
@@ -291,7 +296,6 @@ int Supervisor::_monitor(std::shared_ptr<Process>& process)
     bool has_error = false;
 
     waitpid(process->getPid(), &ret, 0);
-
     process->setIsAlive(false);
     if (WIFEXITED(ret))
     {
