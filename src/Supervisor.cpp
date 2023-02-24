@@ -154,7 +154,6 @@ int Supervisor::isConfigValid()
 
 void Supervisor::init()
 {
-    Utils::LogStatus(mLogFile, "COOL");
     //start all processes that have exec_on_startup set to true
     for (auto& [key, p]: mProcessMap)
     {
