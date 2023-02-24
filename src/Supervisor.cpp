@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <csignal>
 #include <exception>
 #include <functional>
 #include <memory>
@@ -18,13 +19,14 @@
 #include <readline/history.h>
 
 using namespace std::chrono_literals;
+static bool sig_test = false;
 
 // anonymous namespace
 namespace {
-std::function<void(int)> sighup_handler;
-void SignalLambdaWrapper(int signal)
+void sighup_handler(int signal)
 {
-    sighup_handler(signal);
+    sig_test = true;
+    IGNORE(signal);
 }
 
 /*
@@ -151,7 +153,8 @@ int Supervisor::isConfigValid()
 
 void Supervisor::init()
 {
-    // start all processes that have exec_on_startup set to true
+    Utils::LogStatus(mLogFile, "COOL");
+    //start all processes that have exec_on_startup set to true
     for (auto& [key, p]: mProcessMap)
     {
         if (p->getExecOnStartup() == false)
@@ -161,21 +164,23 @@ void Supervisor::init()
         startProcess(p);
     }
 
-    // add signal to reload config
-    sighup_handler = [&] (int signal){
-        IGNORE(signal);
-        reloadConfig(mProcessMap[""]);
-    };
-    signal(SIGHUP, SignalLambdaWrapper);
     // init REPL
     mCommandMap["help"]    = std::bind(&Supervisor::printHelp, this, std::placeholders::_1);
     mCommandMap["reload"]  = std::bind(&Supervisor::reloadConfig, this, std::placeholders::_1);
     mCommandMap["start"]   = std::bind(&Supervisor::startProcess, this, std::placeholders::_1);
+    mCommandMap["restart"] = std::bind(&Supervisor::restartProcess, this, std::placeholders::_1);
     mCommandMap["stop"]    = std::bind(&Supervisor::stopProcess, this, std::placeholders::_1);
     mCommandMap["status"]  = std::bind(&Supervisor::getProcessStatus, this, std::placeholders::_1);
     mCommandMap["exit"]    = std::bind(&Supervisor::exit, this, std::placeholders::_1);
     mCommandMap["history"] = std::bind(&Supervisor::history, this, std::placeholders::_1);
     mCommandMap["list"]    = std::bind(&Supervisor::listProcesses, this, std::placeholders::_1);
+
+    // add signal to reload config
+    struct sigaction shup_handler;
+    sigemptyset(&shup_handler.sa_mask);
+    shup_handler.sa_handler = sighup_handler;
+    shup_handler.sa_flags = SA_RESTART;
+    sigaction(SIGHUP, &shup_handler, NULL);
 
     // start REPL
     for (;;)
@@ -185,6 +190,11 @@ void Supervisor::init()
         string line;
         if (!input)
         {
+            if (sig_test)
+            {
+                sig_test = false;
+                continue;
+            }
             return ;
         }
         line = input;
@@ -223,6 +233,7 @@ void Supervisor::init()
             free(input);
         }
     }
+    std::cout << "????\n";
 }
 
 /*
@@ -231,7 +242,7 @@ void Supervisor::init()
 */
 int Supervisor::startProcess(std::shared_ptr<Process> & process)
 {
-    if (!process->isAlive())
+    if (process->isAlive())
     {
         return 0;
     }
@@ -239,6 +250,19 @@ int Supervisor::startProcess(std::shared_ptr<Process> & process)
     start_thread.detach();
     return 0;
 }
+
+int Supervisor::restartProcess(std::shared_ptr<Process> & process)
+{
+    if (!process->isAlive())
+    {
+        startProcess(process);
+        return 0;
+    }
+    stopProcess(process);
+    startProcess(process);
+    return 0;
+}
+
 
 /*
 ** start and/or restart processes
@@ -472,6 +496,7 @@ int Supervisor::listProcesses(std::shared_ptr<Process>& process)
 int Supervisor::loadConfig(const string & config_path, bool override_existing)
 {
     YAML::Node config;
+    std::cout << "reload config" << std::endl;
     try {
         config = YAML::LoadFile(config_path);
     } catch (std::exception e) {

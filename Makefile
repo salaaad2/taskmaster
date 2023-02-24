@@ -51,6 +51,7 @@ NAME			 = taskmaster
 CC				 = clang++
 #------------------------------------------------------------------------------#
 CFLAGS			 = -std=c++20
+CFLAGS			+= -g3
 CFLAGS			+= -Wall
 CFLAGS			+= -Wextra
 CFLAGS			+= -Werror

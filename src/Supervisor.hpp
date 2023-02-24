@@ -25,14 +25,15 @@ class Supervisor {
         /*
         ** business logic
         */
+        int loadConfig(const string & config_path, bool override_existing = false);
         int isConfigValid();
         void init();
+        void restart();
     private:
 
         /*
         ** private functions
         */
-        int loadConfig(const string & config_path, bool override_existing = false);
         int killAllProcesses();
 
         void _start(std::shared_ptr<Process> & process);
@@ -42,6 +43,7 @@ class Supervisor {
         ** functions called by REPL
         */
         int startProcess(std::shared_ptr<Process> & process);
+        int restartProcess(std::shared_ptr<Process> & process);
         int stopProcess(std::shared_ptr<Process> & process);
         int getProcessStatus(std::shared_ptr<Process> & process);
 
