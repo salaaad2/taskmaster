@@ -23,10 +23,11 @@ static bool sig_test = false;
 
 // anonymous namespace
 namespace {
-void sighup_handler(int signal)
+std::function<void(int)> sighup_handler;
+void SignalLambdaWrapper(int signal)
 {
     sig_test = true;
-    IGNORE(signal);
+    sighup_handler(signal);
 }
 
 /*
@@ -178,9 +179,14 @@ void Supervisor::init()
     // add signal to reload config
     struct sigaction shup_handler;
     sigemptyset(&shup_handler.sa_mask);
-    shup_handler.sa_handler = sighup_handler;
+    shup_handler.sa_handler = SignalLambdaWrapper;
     shup_handler.sa_flags = SA_RESTART;
     sigaction(SIGHUP, &shup_handler, NULL);
+
+    sighup_handler = [&] (int signal) {
+        IGNORE(signal);
+        reloadConfig(mProcessMap[""]);
+    };
 
     // start REPL
     for (;;)
@@ -190,8 +196,11 @@ void Supervisor::init()
         string line;
         if (!input)
         {
+            // readline sets input to nullptr upon receiving a 
+            //  signal
             if (sig_test)
             {
+                std::cout << "\n";
                 sig_test = false;
                 continue;
             }
@@ -233,7 +242,6 @@ void Supervisor::init()
             free(input);
         }
     }
-    std::cout << "????\n";
 }
 
 /*
@@ -496,7 +504,6 @@ int Supervisor::listProcesses(std::shared_ptr<Process>& process)
 int Supervisor::loadConfig(const string & config_path, bool override_existing)
 {
     YAML::Node config;
-    std::cout << "reload config" << std::endl;
     try {
         config = YAML::LoadFile(config_path);
     } catch (std::exception e) {
