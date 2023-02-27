@@ -159,9 +159,15 @@ std::ostream & operator<<(std::ostream & s, const Process & src)
         working_dir = path;
     }
     string rets;
-    for (auto & ret: src.getExpectedReturnValues())
+    const std::vector<int>& ret_vals = src.getExpectedReturnValues();
+    bool add_comma = ret_vals.size() != 1;
+    for (auto it = ret_vals.begin(); it != ret_vals.end(); ++it)
     {
-        rets += std::to_string(ret);
+        rets += std::to_string(*it);
+        if (add_comma)
+        {
+            rets += ", ";
+        }
     }
     if (src.getCommandArguments().size() != 0)
     {

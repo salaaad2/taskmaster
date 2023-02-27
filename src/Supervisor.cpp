@@ -520,7 +520,7 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
     }
     for (auto it = processes_node.begin(); it != processes_node.end(); ++it)
     {
-        // three cases options:
+        // four options:
         // I:  fatal, go to the next node
         // II: set default value
         // III:set incorrect value
@@ -544,7 +544,6 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
             new_process :
             old_process_it->second;
 
-        //SetPotentialRestartOptions();
         // options that might trigger a restart
         new_process->setFullPath(GetYAMLNode<string>(it, "full_path", old_process->getFullPath(), &is_node_valid, &value_changed));
         if (!is_node_valid)
@@ -605,14 +604,13 @@ int Supervisor::loadConfig(const string & config_path, bool override_existing)
             new_process->appendCommandArgument(c.as<string>());
         }
 
-        // setEnvironment
         auto env_vars = it->second["additional_env"];
         char** env_ptr = mInitialEnvironment;
         if (env_vars){
             SetProcessEnvironment(new_process, env_vars, env_ptr);
         }
 
-        // if we want to create multiple processes, create a new one using the copy constructor,
+        // if we want to create multiple processes, we create copies and give them each a unique name
         //  give it a unique name and add it to mProcessMap
         int n_processes = GetYAMLNode<int>(it, "number_of_processes", &is_node_valid);
         if (is_node_valid && n_processes > 1)

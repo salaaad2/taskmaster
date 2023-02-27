@@ -75,7 +75,6 @@ namespace Utils {
     int PrintHelp();
     int MissingArgument(const string & argument);
 
-
     /*
     ** signal handler
     */
