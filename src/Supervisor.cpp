@@ -249,7 +249,7 @@ void Supervisor::init()
 */
 int Supervisor::startProcess(std::shared_ptr<Process> & process)
 {
-    if (process->isAlive())
+    if (!process->isAlive())
     {
         return 0;
     }
