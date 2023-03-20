@@ -1,9 +1,9 @@
 #!/bin/bash
+
 rm valid.log
 rm taskmaster.log
 
 ./taskmaster --log-file basic.log --config-file ./test/basic_tests.yaml 2>/dev/null
-sleep 4
 
 # expected results
 basic_test_results=(
